@@ -35,7 +35,7 @@ Vector2.prototype.dist = function(otherVector) {
     0.5);
 };
 
-var Gorilla = function(position, color, strength, angle, quadrant) {
+var Gorilla = function(position, color, strength, angle, quadrant, npc) {
   this.position = position;
   this.color = color;
   this.strength = strength;
@@ -43,6 +43,7 @@ var Gorilla = function(position, color, strength, angle, quadrant) {
   this.textAlignment = quadrant === 1 ? LEFT : RIGHT;
   this.textX = quadrant === 1 ? 10 : width - 60;
   this.angleDirection = quadrant === 1 ? 1 : -1;
+  this.npc = npc || false;
 };
 
 function preload() {
@@ -259,4 +260,101 @@ function keyReleased() {
   } else if (keyCode === RIGHT_ARROW) {
     subtractAngle = false;
   }
+}
+
+/* AI Functions 
+* new gorilla attributes:
+* - target: Gorilla
+* - throwResult
+* - previousThrowResult
+* - aimStrategy
+*     .angle
+*     .strength
+*/
+
+
+function selectTargetAI() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+  if (typeof(currentGorilla.target) === 'undefined') {
+    var targetIndex = Math.floor(random(gorillas.length - 1));
+
+    // discard itself
+    if (targetIndex >= currentPlayerIndex) {
+      targetIndex++;
+    }
+
+    currentGorilla.target = gorillas[targetIndex];
+  }
+}
+
+function generateFirstGuessAI() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+  currentGorilla.strength = 8;
+
+  // target on the left or right?
+  if (currentGorilla.target.position.x > currentGorilla.position) {
+    if (currentGorilla.quadrant === 1) {
+      currentGorilla.angle = 45;
+    } else {
+      currentGorilla.angle = 135;
+    }
+  } else {
+    if (currentGorilla.quadrant === 1) {
+      currentGorilla.angle = 135;
+    } else {
+      currentGorilla.angle = 45;
+    }
+  }
+}
+
+// need improvements, would be better if I could know which side of target was the thrown
+function storeResultAI() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+
+  // if target exists store the distance, otherwhise the target has been destroyed
+  if (currentGorilla.target) {
+    currentGorilla.throwResult = currentGorilla.target.position.dist(bananaPosition);
+  } else {
+    currentGorilla.throwResult = undefined;
+    currentGorilla.previousThrowResult = undefined;
+  }
+}
+
+function compareResultsAI() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+  return currentGorilla.previousThrowResult - currentGorilla.throwResult;
+}
+
+/* Consider two strategies that can be combined: angle strategy and strength strategy */
+function changeCurrentAimStrategyAI() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+
+  var randomOffsetFactor = random(3);
+
+  if (compareResultsAI() < 0) {
+
+    // flip a coin
+    if (Math.floor(random(2))) {
+      strengthStrategy *= -1;
+    } else {
+      angleStrategy *= -1;
+    }
+  }
+
+  if (typeof(currentGorilla.aimStrategy) === 'undefined') {
+    currentGorilla.aimStrategy = {
+      angle: angleOffset * randomOffsetFactor * angleStrategy,
+      strength: strengthOffset * randomOffsetFactor * strengthStrategy
+    };
+  } else {
+    currentGorilla.aimStrategy.angle *= angleStrategy;
+    currentGorilla.aimStrategy.strength *= strengthStrategy;
+  }
+}
+
+function updateAimAI() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+
+  currentGorilla.angle += currentGorilla.aimStrategy.angle;
+  currentGorilla.strength += currentGorilla.aimStrategy.strength;
 }
