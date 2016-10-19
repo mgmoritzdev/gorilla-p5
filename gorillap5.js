@@ -73,12 +73,26 @@ function draw() {
 }
 
 function displayGameResult() {
-  var { color, strength, angle, textAlignment, textX } = gorillas[currentPlayerIndex];
+
+  var gorilla;
+  var endGameText = '';
+
+  if (noMorePlayers()) {
+    var lastPlayerIndex = currentPlayerIndex === 0 ? 0 : currentPlayerIndex - 1;
+    gorilla = gorillas[lastPlayerIndex];
+    
+    endGameText = 'Você perdeu!';    
+  } else {
+    gorilla = gorillas[currentPlayerIndex];
+    endGameText = 'Parabéns!';
+  }
+  
+  var { color, strength, angle, textAlignment, textX } = gorilla;
   
   textAlign(CENTER);
   fill(color);
-  textSize(26);
-  text ('Parabéns!', width/2, height/2);
+  textSize(26);  
+  text (endGameText, width/2, height/2);
   textSize(14);
   text ('Enter para continuar', width/2, height/2 + 20);
 }
@@ -146,11 +160,11 @@ function updateTarget() {
   var gorilla = gorillas[currentPlayerIndex];
   if (gorilla.npc) {
     if (typeof(gorilla.target) === 'undefined') {
-      selectTargetAI();
-      generateFirstGuessAI();
+      gorilla.selectTargetAI();
+      gorilla.generateFirstGuessAI();
     } else {
-      setAimStrategyAI();
-      updateAimAI();
+      gorilla.setAimStrategyAI();
+      gorilla.updateAimAI();
     }
     throwBanana();
     return;
@@ -202,7 +216,7 @@ function initializeGreenGorilla() {
   gorillas.push(newGorilla);
 }
 
-function initializeMagentaGorilla() {
+function initializeYellowGorilla() {
   var newGorilla = new Gorilla(
     new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
     color(255,255,0),
@@ -213,10 +227,10 @@ function initializeMagentaGorilla() {
   gorillas.push(newGorilla);
 }
 
-function initializeYellowGorilla() {
+function initializeMagentaGorilla() {
   var newGorilla = new Gorilla(
     new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
-    color(0,255,255),
+    color(255,0,255),
     10,
     45,
     3,
@@ -232,22 +246,29 @@ function updateBanana() {
 
   updateThrowResult();
   var enemyDestroyed = getEnemyDestroyed();
+  var enemyDestroyedIndex = gorillas.indexOf(enemyDestroyed);
 
   if (typeof(enemyDestroyed) !== 'undefined') {
+
     explosionSound.setVolume(0.3);
     explosionSound.play();
-    gorillas = gorillas.filter((x) => x !== enemyDestroyed);
+
+    if (enemyDestroyedIndex < currentPlayerIndex) {
+      currentPlayerIndex--;
+    }
+    gorillas = gorillas.filter(x => x !== enemyDestroyed);
     isBananaFlying = false;
+
     callNextPlayer();
 
-    if (checkWinState()) {
+    if (checkEndGameState()) {
       gameEnded = true;
     }
   }
 
   if (hitGround()) {
     isBananaFlying = false;
-    storeResultAI();
+    gorillas[currentPlayerIndex].storeResultAI();
     callNextPlayer();
     return;
   }
@@ -258,8 +279,12 @@ function updateBanana() {
   }
 }
 
-function checkWinState() {
-  return gorillas.length === 1;
+function checkEndGameState() {
+  return gorillas.length === 1 || noMorePlayers();
+}
+
+function noMorePlayers() {
+  return gorillas.filter(x => !x.npc).length === 0;
 }
 
 function callNextPlayer() {
@@ -288,7 +313,6 @@ function updateThrowResult() {
   // if (Math.abs(bananaPosition.y - currentGorilla.target.position.y) < 10) {
   if(currentGorilla.target.position.dist(bananaPosition) < currentGorilla.throwResult || typeof(currentGorilla.throwResult) === 'undefined') {
     currentGorilla.throwResult = currentGorilla.target.position.dist(bananaPosition);
-    console.log(currentGorilla.throwResult);
   }
   // }
 }
@@ -375,7 +399,7 @@ function keyReleased() {
 */
 
 
-function selectTargetAI() {
+Gorilla.prototype.selectTargetAI = function() {
   var currentGorilla = gorillas[currentPlayerIndex];
   if (typeof(currentGorilla.target) === 'undefined') {
     var targetIndex = Math.floor(random(gorillas.length - 1));
@@ -389,7 +413,7 @@ function selectTargetAI() {
   }
 }
 
-function generateFirstGuessAI() {
+Gorilla.prototype.generateFirstGuessAI = function() {
   var currentGorilla = gorillas[currentPlayerIndex];
   currentGorilla.strength = 8;
 
@@ -410,7 +434,7 @@ function generateFirstGuessAI() {
 }
 
 // need improvements, would be better if I could know which side of target was the thrown
-function storeResultAI() {
+Gorilla.prototype.storeResultAI = function() {
   var currentGorilla = gorillas[currentPlayerIndex];
 
   // if target exists store the distance, otherwhise the target has been destroyed
@@ -427,7 +451,10 @@ function storeResultAI() {
 }
 
 /* Consider two strategies that can be combined: angle strategy and strength strategy */
-function setAimStrategyAI() {
+// all combinations of strength and angle are possible:
+// strength: [-1, 0, 1] * strength
+// angle: [-1, 0, 1] * angle
+Gorilla.prototype.setAimStrategyAI = function() {
   var currentGorilla = gorillas[currentPlayerIndex];
   var randomOffsetFactor = random(5, 20);
 
@@ -458,7 +485,7 @@ function setAimStrategyAI() {
   }
 }
 
-function updateAimAI() {
+Gorilla.prototype.updateAimAI = function() {
   var currentGorilla = gorillas[currentPlayerIndex];
 
   currentGorilla.angle += currentGorilla.aimStrategy.angle;
