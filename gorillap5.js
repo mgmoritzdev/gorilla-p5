@@ -400,8 +400,7 @@ function keyReleased() {
 
 
 Gorilla.prototype.selectTargetAI = function() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-  if (typeof(currentGorilla.target) === 'undefined') {
+  if (typeof(this.target) === 'undefined') {
     var targetIndex = Math.floor(random(gorillas.length - 1));
 
     // discard itself
@@ -409,62 +408,53 @@ Gorilla.prototype.selectTargetAI = function() {
       targetIndex++;
     }
 
-    currentGorilla.target = gorillas[targetIndex];
+    this.target = gorillas[targetIndex];
   }
-}
+};
 
 Gorilla.prototype.generateFirstGuessAI = function() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-  currentGorilla.strength = 8;
+  this.strength = 8;
 
   // target on the left or right?
-  if (currentGorilla.target.position.x > currentGorilla.position) {
-    if (currentGorilla.quadrant === 1) {
-      currentGorilla.angle = 45;
+  if (this.target.position.x > this.position) {
+    if (this.quadrant === 1) {
+      this.angle = 45;
     } else {
-      currentGorilla.angle = 135;
+      this.angle = 135;
     }
   } else {
-    if (currentGorilla.quadrant === 1) {
-      currentGorilla.angle = 135;
+    if (this.quadrant === 1) {
+      this.angle = 135;
     } else {
-      currentGorilla.angle = 45;
+      this.angle = 45;
     }
   }
-}
+};
 
 // need improvements, would be better if I could know which side of target was the thrown
 Gorilla.prototype.storeResultAI = function() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-
   // if target exists store the distance, otherwhise the target has been destroyed
-  if (currentGorilla.target) {
-    if (typeof(currentGorilla.previousThrowResult) !== 'undefined') {
-      currentGorilla.aimProgress = currentGorilla.previousThrowResult - currentGorilla.throwResult;
+  if (this.target) {
+    if (typeof(this.previousThrowResult) !== 'undefined') {
+      this.aimProgress = this.previousThrowResult - this.throwResult;
     }
-    currentGorilla.previousThrowResult = currentGorilla.throwResult;
-    currentGorilla.throwResult = undefined;
+    this.previousThrowResult = this.throwResult;
+    this.throwResult = undefined;
   } else {
-    currentGorilla.throwResult = undefined;
-    currentGorilla.previousThrowResult = undefined;
+    this.throwResult = undefined;
+    this.previousThrowResult = undefined;
   }
-}
+};
 
 /* Consider two strategies that can be combined: angle strategy and strength strategy */
 // all combinations of strength and angle are possible:
 // strength: [-1, 0, 1] * strength
 // angle: [-1, 0, 1] * angle
 Gorilla.prototype.setAimStrategyAI = function() {
-  var currentGorilla = gorillas[currentPlayerIndex];
   var randomOffsetFactor = random(5, 20);
 
-  // first set strategy
-  if (typeof(currentGorilla.aimStrategy) === 'undefined') {
-    currentGorilla.aimStrategy = {
-      angle: angleOffset * randomOffsetFactor,
-      strength: strengthOffset * randomOffsetFactor
-    };
-
+  if (!this.isStrategySet()) {
+    this.setStrategy(1, 0);
     return;
   }
 
@@ -472,7 +462,7 @@ Gorilla.prototype.setAimStrategyAI = function() {
   var angleStrategy = 1;
 
   // aim diverging
-  if (currentGorilla.aimProgress <= 0) {
+  if (this.aimProgress <= 0) {
     // flip a coin
     if (Math.floor(random(2)) > 0) {
       strengthStrategy *= -1;
@@ -480,14 +470,23 @@ Gorilla.prototype.setAimStrategyAI = function() {
       angleStrategy *= -1;
     }
 
-    currentGorilla.aimStrategy.angle *= angleStrategy;
-    currentGorilla.aimStrategy.strength *= strengthStrategy;
+    this.aimStrategy.angle *= angleStrategy;
+    this.aimStrategy.strength *= strengthStrategy;
   }
-}
+};
+
+Gorilla.prototype.isStrategySet = function() {
+  return typeof(this.aimStrategy) !== 'undefined';
+};
+
+Gorilla.prototype.setStrategy = function(strengthStrategy, angleStrategy) {
+  this.aimStrategy = {
+    strength: strengthOffset * strengthStrategy,
+    angle: angleOffset * angleStrategy
+  };
+};
 
 Gorilla.prototype.updateAimAI = function() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-
-  currentGorilla.angle += currentGorilla.aimStrategy.angle;
-  currentGorilla.strength += currentGorilla.aimStrategy.strength;
-}
+  this.angle += this.aimStrategy.angle;
+  this.strength += this.aimStrategy.strength;
+};
