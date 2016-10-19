@@ -67,7 +67,20 @@ function draw() {
     updateBanana();
     drawBanana();
     drawTarget();
+  } else {
+    displayGameResult();
   }
+}
+
+function displayGameResult() {
+  var { color, strength, angle, textAlignment, textX } = gorillas[currentPlayerIndex];
+  
+  textAlign(CENTER);
+  fill(color);
+  textSize(26);
+  text ('Parabéns!', width/2, height/2);
+  textSize(14);
+  text ('Enter para continuar', width/2, height/2 + 20);
 }
 
 function drawTarget() {
@@ -75,6 +88,7 @@ function drawTarget() {
   var { color, strength, angle, textAlignment, textX } = gorillas[currentPlayerIndex];
   fill(color);
   textAlign(textAlignment);
+  textSize(14);
   text ('Força: ' + strength.toFixed(2), textX, 25);
   text ('Ângulo: ' + Math.abs(angle%90).toFixed(2), textX, 60);
   fill(255);
@@ -109,6 +123,9 @@ function resetGame() {
   gorillas = [];
   initializeBlueGorilla();
   initializeRedGorilla();
+  initializeGreenGorilla();
+  initializeMagentaGorilla();
+  initializeYellowGorilla();
   currentPlayerIndex = 0;
   isBananaFlying = false;
   gameStarted = true;
@@ -121,20 +138,34 @@ function resetGame() {
 }
 
 function updateTarget() {
+
   if (isBananaFlying) {
     return;
   }
 
+  var gorilla = gorillas[currentPlayerIndex];
+  if (gorilla.npc) {
+    if (typeof(gorilla.target) === 'undefined') {
+      selectTargetAI();
+      generateFirstGuessAI();
+    } else {
+      setAimStrategyAI();
+      updateAimAI();
+    }
+    throwBanana();
+    return;
+  }
+
   if (addStrength) {
-    gorillas[currentPlayerIndex].strength += strengthOffset;
+    gorilla.strength += strengthOffset;
   } else if (subtractStrength) {
-    gorillas[currentPlayerIndex].strength -= strengthOffset;
+    gorilla.strength -= strengthOffset;
   }
 
   if (addAngle) {
-    gorillas[currentPlayerIndex].angle += gorillas[currentPlayerIndex].angleDirection * angleOffset;
+    gorilla.angle += gorilla.angleDirection * angleOffset;
   } else if (subtractAngle) {
-    gorillas[currentPlayerIndex].angle -= gorillas[currentPlayerIndex].angleDirection * angleOffset;
+    gorilla.angle -= gorilla.angleDirection * angleOffset;
   }
 }
 
@@ -144,7 +175,8 @@ function initializeBlueGorilla() {
     color(0,0,255),
     10,
     45,
-    1);
+    1,
+    false);
   gorillas.push(newGorilla);
 }
 
@@ -154,24 +186,68 @@ function initializeRedGorilla() {
     color(255,0,0),
     10,
     45,
-    3);
+    3,
+    true);
+  gorillas.push(newGorilla);
+}
+
+function initializeGreenGorilla() {
+  var newGorilla = new Gorilla(
+    new Vector2(random(0.45*width, 0.55*width), getRandomYPosition()),
+    color(0,255,0),
+    10,
+    45,
+    3,
+    true);
+  gorillas.push(newGorilla);
+}
+
+function initializeMagentaGorilla() {
+  var newGorilla = new Gorilla(
+    new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
+    color(255,255,0),
+    10,
+    45,
+    3,
+    true);
+  gorillas.push(newGorilla);
+}
+
+function initializeYellowGorilla() {
+  var newGorilla = new Gorilla(
+    new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
+    color(0,255,255),
+    10,
+    45,
+    3,
+    true);
   gorillas.push(newGorilla);
 }
 
 function getRandomYPosition() {
-  return random(0.5*height, 0.9*height);
+  return random(0.5 * height, 0.9*height);
 }
 
 function updateBanana() {
 
-  if (checkWinState()) {
+  updateThrowResult();
+  var enemyDestroyed = getEnemyDestroyed();
+
+  if (typeof(enemyDestroyed) !== 'undefined') {
     explosionSound.setVolume(0.3);
     explosionSound.play();
-    gameEnded = true;
+    gorillas = gorillas.filter((x) => x !== enemyDestroyed);
+    isBananaFlying = false;
+    callNextPlayer();
+
+    if (checkWinState()) {
+      gameEnded = true;
+    }
   }
 
   if (hitGround()) {
     isBananaFlying = false;
+    storeResultAI();
     callNextPlayer();
     return;
   }
@@ -182,21 +258,46 @@ function updateBanana() {
   }
 }
 
+function checkWinState() {
+  return gorillas.length === 1;
+}
+
 function callNextPlayer() {
   currentPlayerIndex = ++currentPlayerIndex % gorillas.length;
 }
 
-function checkWinState() {
+function getEnemyDestroyed() {
   if (isBananaFlying) {
-    var nextGorilla = gorillas[(currentPlayerIndex + 1) % gorillas.length];
-    return nextGorilla.position.dist(bananaPosition) < (bananaDiameter/2 + gorillaDiameter/2);
+    var otherGorillas = gorillas.filter(x => x !== gorillas[currentPlayerIndex]);
+    var hitGorilla = otherGorillas
+      .filter(x => x.position.dist(bananaPosition) < (bananaDiameter/2 + gorillaDiameter/2));    
+
+    if (hitGorilla.length > 0) {
+      return hitGorilla[0];
+    }
   }
-  return false;
+}
+
+function updateThrowResult() {
+  var currentGorilla = gorillas[currentPlayerIndex];
+
+  if (!currentGorilla.npc) {
+    return;
+  }
+
+  // if (Math.abs(bananaPosition.y - currentGorilla.target.position.y) < 10) {
+  if(currentGorilla.target.position.dist(bananaPosition) < currentGorilla.throwResult || typeof(currentGorilla.throwResult) === 'undefined') {
+    currentGorilla.throwResult = currentGorilla.target.position.dist(bananaPosition);
+    console.log(currentGorilla.throwResult);
+  }
+  // }
 }
 
 function hitGround() {
   if (isBananaFlying) {
-    return bananaPosition.y > height;
+    return bananaPosition.y > height ||
+      bananaPosition.x > width * 1.5 ||
+      bananaPosition.x < -0.5 * width;
   }
 
   return false;
@@ -267,6 +368,7 @@ function keyReleased() {
 * - target: Gorilla
 * - throwResult
 * - previousThrowResult
+* - aimProgress
 * - aimStrategy
 *     .angle
 *     .strength
@@ -313,40 +415,44 @@ function storeResultAI() {
 
   // if target exists store the distance, otherwhise the target has been destroyed
   if (currentGorilla.target) {
-    currentGorilla.throwResult = currentGorilla.target.position.dist(bananaPosition);
+    if (typeof(currentGorilla.previousThrowResult) !== 'undefined') {
+      currentGorilla.aimProgress = currentGorilla.previousThrowResult - currentGorilla.throwResult;
+    }
+    currentGorilla.previousThrowResult = currentGorilla.throwResult;
+    currentGorilla.throwResult = undefined;
   } else {
     currentGorilla.throwResult = undefined;
     currentGorilla.previousThrowResult = undefined;
   }
 }
 
-function compareResultsAI() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-  return currentGorilla.previousThrowResult - currentGorilla.throwResult;
-}
-
 /* Consider two strategies that can be combined: angle strategy and strength strategy */
-function changeCurrentAimStrategyAI() {
+function setAimStrategyAI() {
   var currentGorilla = gorillas[currentPlayerIndex];
+  var randomOffsetFactor = random(5, 20);
 
-  var randomOffsetFactor = random(3);
+  // first set strategy
+  if (typeof(currentGorilla.aimStrategy) === 'undefined') {
+    currentGorilla.aimStrategy = {
+      angle: angleOffset * randomOffsetFactor,
+      strength: strengthOffset * randomOffsetFactor
+    };
 
-  if (compareResultsAI() < 0) {
+    return;
+  }
 
+  var strengthStrategy = 1;
+  var angleStrategy = 1;
+
+  // aim diverging
+  if (currentGorilla.aimProgress <= 0) {
     // flip a coin
-    if (Math.floor(random(2))) {
+    if (Math.floor(random(2)) > 0) {
       strengthStrategy *= -1;
     } else {
       angleStrategy *= -1;
     }
-  }
 
-  if (typeof(currentGorilla.aimStrategy) === 'undefined') {
-    currentGorilla.aimStrategy = {
-      angle: angleOffset * randomOffsetFactor * angleStrategy,
-      strength: strengthOffset * randomOffsetFactor * strengthStrategy
-    };
-  } else {
     currentGorilla.aimStrategy.angle *= angleStrategy;
     currentGorilla.aimStrategy.strength *= strengthStrategy;
   }
