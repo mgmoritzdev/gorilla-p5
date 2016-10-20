@@ -280,7 +280,7 @@ function updateBanana() {
 }
 
 function checkEndGameState() {
-  return gorillas.length === 1;// || noMorePlayers();
+  return gorillas.length === 1 || noMorePlayers();
 }
 
 function noMorePlayers() {
