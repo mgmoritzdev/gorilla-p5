@@ -35,15 +35,18 @@ Vector2.prototype.dist = function(otherVector) {
     0.5);
 };
 
-var Gorilla = function(position, color, strength, angle, quadrant, npc) {
+var Gorilla = function(position, color, strength, angle, faceRight, npc) {
   this.position = position;
   this.color = color;
   this.strength = strength;
   this.angle = angle;
-  this.textAlignment = quadrant === 1 ? LEFT : RIGHT;
-  this.textX = quadrant === 1 ? 10 : width - 60;
-  this.angleDirection = quadrant === 1 ? 1 : -1;
+
   this.npc = npc || false;
+  this.ai = {};
+
+  this.textAlignment = this.npc ? RIGHT : LEFT;
+  this.textX = this.npc ? width - 60 : 10;
+  this.angleDirection = this.npc ? 1 : 1;
 };
 
 function preload() {
@@ -80,18 +83,18 @@ function displayGameResult() {
   if (noMorePlayers()) {
     var lastPlayerIndex = currentPlayerIndex === 0 ? 0 : currentPlayerIndex - 1;
     gorilla = gorillas[lastPlayerIndex];
-    
-    endGameText = 'Você perdeu!';    
+
+    endGameText = 'Você perdeu!';
   } else {
     gorilla = gorillas[currentPlayerIndex];
     endGameText = 'Parabéns!';
   }
-  
+
   var { color, strength, angle, textAlignment, textX } = gorilla;
-  
+
   textAlign(CENTER);
   fill(color);
-  textSize(26);  
+  textSize(26);
   text (endGameText, width/2, height/2);
   textSize(14);
   text ('Enter para continuar', width/2, height/2 + 20);
@@ -117,7 +120,7 @@ function drawBanana() {
 function drawGorillas() {
   gorillas.forEach(gorilla => {
     let { color, strength, angle, textAlignment, textX, position, angleDirection } = gorilla;
-  
+
     fill(color);
     stroke(color);
     strokeWeight(5);
@@ -159,15 +162,18 @@ function updateTarget() {
 
   var gorilla = gorillas[currentPlayerIndex];
   if (gorilla.npc) {
-    if (typeof(gorilla.target) === 'undefined') {
+    if (typeof(gorilla.ai.target) === 'undefined') {
       gorilla.selectTargetAI();
       gorilla.generateFirstGuessAI();
-    } else {
+    } else if(!gorilla.aimDefined()) {
       gorilla.setAimStrategyAI();
       gorilla.updateAimAI();
+    } 
+
+    if(gorilla.isLocked()) {
+      throwBanana();
+      return;
     }
-    throwBanana();
-    return;
   }
 
   if (addStrength) {
@@ -178,8 +184,20 @@ function updateTarget() {
 
   if (addAngle) {
     gorilla.angle += gorilla.angleDirection * angleOffset;
+
+    if (gorilla.angle > 360) {
+      gorilla.angle -= 360;
+    } else if (gorilla.angle < 0) {
+      gorilla.angle += 360;
+    }
   } else if (subtractAngle) {
     gorilla.angle -= gorilla.angleDirection * angleOffset;
+
+    if (gorilla.angle > 360) {
+      gorilla.angle -= 360;
+    } else if (gorilla.angle < 0) {
+      gorilla.angle += 360;
+    }
   }
 }
 
@@ -311,8 +329,8 @@ function updateThrowResult() {
   }
 
   // if (Math.abs(bananaPosition.y - currentGorilla.target.position.y) < 10) {
-  if(currentGorilla.target.position.dist(bananaPosition) < currentGorilla.throwResult || typeof(currentGorilla.throwResult) === 'undefined') {
-    currentGorilla.throwResult = currentGorilla.target.position.dist(bananaPosition);
+  if(currentGorilla.ai.target.position.dist(bananaPosition) < currentGorilla.throwResult || typeof(currentGorilla.throwResult) === 'undefined') {
+    currentGorilla.throwResult = currentGorilla.ai.target.position.dist(bananaPosition);
   }
   // }
 }
@@ -400,7 +418,7 @@ function keyReleased() {
 
 
 Gorilla.prototype.selectTargetAI = function() {
-  if (typeof(this.target) === 'undefined') {
+  if (typeof(this.ai.target) === 'undefined') {
     var targetIndex = Math.floor(random(gorillas.length - 1));
 
     // discard itself
@@ -408,25 +426,25 @@ Gorilla.prototype.selectTargetAI = function() {
       targetIndex++;
     }
 
-    this.target = gorillas[targetIndex];
+    this.ai.target = gorillas[targetIndex];
   }
 };
 
 Gorilla.prototype.generateFirstGuessAI = function() {
-  this.strength = 8;
+  this.ai.strength = 8;
 
   // target on the left or right?
-  if (this.target.position.x > this.position) {
-    if (this.quadrant === 1) {
-      this.angle = 45;
+  if (this.ai.target.position.x > this.position) {
+    if (this.angleDirection === 1) {
+      this.ai.angle = 45;
     } else {
-      this.angle = 135;
+      this.ai.angle = 135;
     }
   } else {
-    if (this.quadrant === 1) {
-      this.angle = 135;
+    if (this.angleDirection === 1) {
+      this.ai.angle = 135;
     } else {
-      this.angle = 45;
+      this.ai.angle = 45;
     }
   }
 };
@@ -434,15 +452,17 @@ Gorilla.prototype.generateFirstGuessAI = function() {
 // need improvements, would be better if I could know which side of target was the thrown
 Gorilla.prototype.storeResultAI = function() {
   // if target exists store the distance, otherwhise the target has been destroyed
-  if (this.target) {
-    if (typeof(this.previousThrowResult) !== 'undefined') {
-      this.aimProgress = this.previousThrowResult - this.throwResult;
+  if (this.ai.target) {
+    if (typeof(this.ai.previousThrowResult) !== 'undefined') {
+      this.ai.aimProgress = this.ai.previousThrowResult - this.ai.throwResult;
     }
-    this.previousThrowResult = this.throwResult;
-    this.throwResult = undefined;
+    this.ai.previousThrowResult = this.ai.throwResult;
+    this.ai.throwResult = undefined;
+    this.ai.aimDefined = false;
   } else {
-    this.throwResult = undefined;
-    this.previousThrowResult = undefined;
+    this.ai.throwResult = undefined;
+    this.ai.previousThrowResult = undefined;
+    this.ai.aimDefined = false;
   }
 };
 
@@ -459,19 +479,19 @@ Gorilla.prototype.setAimStrategyAI = function() {
   }
 
   // aim diverging
-  if (this.aimProgress <= 0) {
+  if (this.ai.aimProgress <= 0) {
     this.setNextStrategy();
   }
 };
 
 Gorilla.prototype.isStrategySet = function() {
-  return typeof(this.aimStrategy) !== 'undefined';
+  return typeof(this.ai.aimStrategy) !== 'undefined';
 };
 
 Gorilla.prototype.setNextStrategy = function() {
   var strategies = [-1, 0, 1];
-  var currStrength = this.getDirection(this.aimStrategy.strength);
-  var currAngle = this.getDirection(this.aimStrategy.angle);
+  var currStrength = this.getDirection(this.ai.aimStrategy.strength);
+  var currAngle = this.getDirection(this.ai.aimStrategy.angle);
 
   if (currAngle === 1) {
     if (currStrength === 1) {
@@ -496,13 +516,27 @@ Gorilla.prototype.getDirection = function(value) {
 };
 
 Gorilla.prototype.setStrategy = function(strengthStrategy, angleStrategy) {
-  this.aimStrategy = {
+  this.ai.aimStrategy = {
     strength: strengthOffset * strengthStrategy * 10,
     angle: angleOffset * angleStrategy * 10
   };
 };
 
 Gorilla.prototype.updateAimAI = function() {
-  this.angle += this.aimStrategy.angle;
-  this.strength += this.aimStrategy.strength;
+  this.ai.angle += this.ai.aimStrategy.angle;
+  this.ai.strength += this.ai.aimStrategy.strength;
+  this.ai.aimDefined = true;
+};
+
+Gorilla.prototype.aimDefined = function() {
+  return this.ai.aimDefined;
+};
+
+Gorilla.prototype.isLocked = function() {
+  subtractAngle = (this.angle - this.ai.angle > angleOffset);
+  addAngle = (this.ai.angle - this.angle > angleOffset);
+  addStrength = (this.ai.strength - this.strength > strengthOffset);
+  subtractStrength = (this.strength - this.ai.strength  > strengthOffset);
+
+  return !subtractAngle && !addAngle && !subtractStrength && !addStrength;
 };
