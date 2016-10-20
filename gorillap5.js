@@ -280,7 +280,7 @@ function updateBanana() {
 }
 
 function checkEndGameState() {
-  return gorillas.length === 1 || noMorePlayers();
+  return gorillas.length === 1;// || noMorePlayers();
 }
 
 function noMorePlayers() {
@@ -454,24 +454,13 @@ Gorilla.prototype.setAimStrategyAI = function() {
   var randomOffsetFactor = random(5, 20);
 
   if (!this.isStrategySet()) {
-    this.setStrategy(1, 0);
+    this.setStrategy(0, 1);
     return;
   }
 
-  var strengthStrategy = 1;
-  var angleStrategy = 1;
-
   // aim diverging
   if (this.aimProgress <= 0) {
-    // flip a coin
-    if (Math.floor(random(2)) > 0) {
-      strengthStrategy *= -1;
-    } else {
-      angleStrategy *= -1;
-    }
-
-    this.aimStrategy.angle *= angleStrategy;
-    this.aimStrategy.strength *= strengthStrategy;
+    this.setNextStrategy();
   }
 };
 
@@ -479,10 +468,37 @@ Gorilla.prototype.isStrategySet = function() {
   return typeof(this.aimStrategy) !== 'undefined';
 };
 
+Gorilla.prototype.setNextStrategy = function() {
+  var strategies = [-1, 0, 1];
+  var currStrength = this.getDirection(this.aimStrategy.strength);
+  var currAngle = this.getDirection(this.aimStrategy.angle);
+
+  if (currAngle === 1) {
+    if (currStrength === 1) {
+      this.setStrategy(-1, -1);
+    }
+    else {
+      this.setStrategy(currStrength + 1, -1);
+    }
+  } else {
+    this.setStrategy(currStrength, currAngle + 1);
+  }
+};
+
+Gorilla.prototype.getDirection = function(value) {
+  if (value > 0) {
+    return 1;
+  } else if (value < 0) {
+    return -1;
+  } else {
+    return 0;
+  }
+};
+
 Gorilla.prototype.setStrategy = function(strengthStrategy, angleStrategy) {
   this.aimStrategy = {
-    strength: strengthOffset * strengthStrategy,
-    angle: angleOffset * angleStrategy
+    strength: strengthOffset * strengthStrategy * 10,
+    angle: angleOffset * angleStrategy * 10
   };
 };
 
