@@ -162,7 +162,7 @@ function updateTarget() {
 
   var gorilla = gorillas[currentPlayerIndex];
   if (gorilla.npc) {
-    if (typeof(gorilla.ai.target) === 'undefined') {
+    if (gorillas.indexOf(gorilla.ai.target) === -1) {
       gorilla.selectTargetAI();
       gorilla.generateFirstGuessAI();
     } else if(!gorilla.aimDefined()) {
@@ -184,21 +184,21 @@ function updateTarget() {
 
   if (addAngle) {
     gorilla.angle += gorilla.angleDirection * angleOffset;
-
-    if (gorilla.angle > 360) {
-      gorilla.angle -= 360;
-    } else if (gorilla.angle < 0) {
-      gorilla.angle += 360;
-    }
   } else if (subtractAngle) {
     gorilla.angle -= gorilla.angleDirection * angleOffset;
-
-    if (gorilla.angle > 360) {
-      gorilla.angle -= 360;
-    } else if (gorilla.angle < 0) {
-      gorilla.angle += 360;
-    }
   }
+
+  gorilla.angle = wrapAngle(gorilla.angle);
+}
+
+function wrapAngle(angle) {
+  if (angle > 360) {
+    angle -= 360;
+  } else if (angle < 0) {
+    angle += 360;
+  }
+  
+  return angle;
 }
 
 function initializeBlueGorilla() {
@@ -217,7 +217,7 @@ function initializeRedGorilla() {
     new Vector2(random(0.8*width, 0.9*width), getRandomYPosition()),
     color(255,0,0),
     10,
-    45,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -228,7 +228,7 @@ function initializeGreenGorilla() {
     new Vector2(random(0.45*width, 0.55*width), getRandomYPosition()),
     color(0,255,0),
     10,
-    45,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -239,7 +239,7 @@ function initializeYellowGorilla() {
     new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
     color(255,255,0),
     10,
-    45,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -250,7 +250,7 @@ function initializeMagentaGorilla() {
     new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
     color(255,0,255),
     10,
-    45,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -324,15 +324,14 @@ function getEnemyDestroyed() {
 function updateThrowResult() {
   var currentGorilla = gorillas[currentPlayerIndex];
 
-  if (!currentGorilla.npc) {
+  if (!currentGorilla.npc || !isBananaFlying) {
     return;
   }
 
-  // if (Math.abs(bananaPosition.y - currentGorilla.target.position.y) < 10) {
-  if(currentGorilla.ai.target.position.dist(bananaPosition) < currentGorilla.throwResult || typeof(currentGorilla.throwResult) === 'undefined') {
-    currentGorilla.throwResult = currentGorilla.ai.target.position.dist(bananaPosition);
+  if (typeof(currentGorilla.ai.throwResult) === 'undefined'){
+    currentGorilla.ai.throwResult = [];
   }
-  // }
+  currentGorilla.ai.throwResult.push(currentGorilla.ai.target.position.dist(bananaPosition));
 }
 
 function hitGround() {
@@ -418,34 +417,24 @@ function keyReleased() {
 
 
 Gorilla.prototype.selectTargetAI = function() {
-  if (typeof(this.ai.target) === 'undefined') {
-    var targetIndex = Math.floor(random(gorillas.length - 1));
+  var targetIndex = Math.floor(random(gorillas.length - 1));
 
-    // discard itself
-    if (targetIndex >= currentPlayerIndex) {
-      targetIndex++;
-    }
-
-    this.ai.target = gorillas[targetIndex];
+  // discard itself
+  if (targetIndex >= currentPlayerIndex) {
+    targetIndex++;
   }
+
+  this.ai.target = gorillas[targetIndex];
 };
 
 Gorilla.prototype.generateFirstGuessAI = function() {
   this.ai.strength = 8;
 
   // target on the left or right?
-  if (this.ai.target.position.x > this.position) {
-    if (this.angleDirection === 1) {
-      this.ai.angle = 45;
-    } else {
-      this.ai.angle = 135;
-    }
+  if (this.ai.target.position.x < this.position.x) {
+    this.ai.angle = 135;
   } else {
-    if (this.angleDirection === 1) {
-      this.ai.angle = 135;
-    } else {
-      this.ai.angle = 45;
-    }
+    this.ai.angle = 45;
   }
 };
 
@@ -454,7 +443,7 @@ Gorilla.prototype.storeResultAI = function() {
   // if target exists store the distance, otherwhise the target has been destroyed
   if (this.ai.target) {
     if (typeof(this.ai.previousThrowResult) !== 'undefined') {
-      this.ai.aimProgress = this.ai.previousThrowResult - this.ai.throwResult;
+      this.ai.aimProgress = getAverage(this.ai.previousThrowResult.sort().slice(0,3)) - getAverage(this.ai.throwResult.sort().slice(0,3));
     }
     this.ai.previousThrowResult = this.ai.throwResult;
     this.ai.throwResult = undefined;
@@ -465,6 +454,11 @@ Gorilla.prototype.storeResultAI = function() {
     this.ai.aimDefined = false;
   }
 };
+
+function getAverage(array) {
+  var sum = array.reduce(function(a, b) { return a + b; });
+  return sum/array.length;
+}
 
 /* Consider two strategies that can be combined: angle strategy and strength strategy */
 // all combinations of strength and angle are possible:
@@ -523,7 +517,7 @@ Gorilla.prototype.setStrategy = function(strengthStrategy, angleStrategy) {
 };
 
 Gorilla.prototype.updateAimAI = function() {
-  this.ai.angle += this.ai.aimStrategy.angle;
+  this.ai.angle = wrapAngle(this.ai.angle + this.ai.aimStrategy.angle);
   this.ai.strength += this.ai.aimStrategy.strength;
   this.ai.aimDefined = true;
 };
