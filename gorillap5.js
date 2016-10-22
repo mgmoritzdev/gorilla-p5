@@ -15,8 +15,8 @@ var subtractAngle = false;
 var gravity = 9.81;
 var gravityScaleFactor = 1/60;
 var cannonLength = 20;
-var strengthOffset = 0.05;
-var angleOffset = 0.3;
+var strengthOffset = 0.15;
+var angleOffset = 0.9;
 var cannonFireSound;
 var explosionSound;
 var cannonFireSoundFile = 'assets/sounds/Tank Firing-SoundBible.com-998264747.mp3';
@@ -35,7 +35,8 @@ Vector2.prototype.dist = function(otherVector) {
     0.5);
 };
 
-var Gorilla = function(position, color, strength, angle, faceRight, npc) {
+var Gorilla = function(name, position, color, strength, angle, faceRight, npc) {
+  this.name = name;
   this.position = position;
   this.color = color;
   this.strength = strength;
@@ -203,6 +204,7 @@ function wrapAngle(angle) {
 
 function initializeBlueGorilla() {
   var newGorilla = new Gorilla(
+    'blue',
     new Vector2(random(0.1*width, 0.2*width), getRandomYPosition()),
     color(0,0,255),
     10,
@@ -214,6 +216,7 @@ function initializeBlueGorilla() {
 
 function initializeRedGorilla() {
   var newGorilla = new Gorilla(
+    'red',
     new Vector2(random(0.8*width, 0.9*width), getRandomYPosition()),
     color(255,0,0),
     10,
@@ -225,6 +228,7 @@ function initializeRedGorilla() {
 
 function initializeGreenGorilla() {
   var newGorilla = new Gorilla(
+    'green',
     new Vector2(random(0.45*width, 0.55*width), getRandomYPosition()),
     color(0,255,0),
     10,
@@ -236,6 +240,7 @@ function initializeGreenGorilla() {
 
 function initializeYellowGorilla() {
   var newGorilla = new Gorilla(
+    'yellow',
     new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
     color(255,255,0),
     10,
@@ -247,6 +252,7 @@ function initializeYellowGorilla() {
 
 function initializeMagentaGorilla() {
   var newGorilla = new Gorilla(
+    'magenta',
     new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
     color(255,0,255),
     10,
@@ -430,12 +436,13 @@ Gorilla.prototype.selectTargetAI = function() {
 Gorilla.prototype.generateFirstGuessAI = function() {
   var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
   var distance = this.ai.target.position.dist(this.position);
-  this.ai.strength = (Math.pow(Math.abs(positionDiff.x), 0.5) + Math.pow(Math.abs(positionDiff.y), 0.5)) / 4;
+  this.ai.strength = Math.pow(Math.abs(positionDiff.x), 0.5) / 2 +
+    (positionDiff.y < 0 ? Math.pow(Math.abs(positionDiff.y), 0.5) / 4 : 0);
 
   // target on the left or right?
   var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
   
-  var angleBetweenThisAndTarget = degrees(atan(Math.abs(positionDiff.y/positionDiff.x)));
+  var angleBetweenThisAndTarget = Math.abs(degrees(atan(Math.abs(positionDiff.y/positionDiff.x))));
 
   // starting from the angle between the line that connects this and target, got half way in the straigh angle direction  
   var halfWayTowardsStraigthAngle = (90 - angleBetweenThisAndTarget)/2;
@@ -444,13 +451,15 @@ Gorilla.prototype.generateFirstGuessAI = function() {
     if (positionDiff.y < 0) {
       this.ai.angle = 90 + halfWayTowardsStraigthAngle;
     } else {
-      this.ai.angle = 180 + angleBetweenThisAndTarget/2;
+      this.ai.angle = 90 + (90 + angleBetweenThisAndTarget)/2;
     }
   } else {
     if (positionDiff.y < 0) {
+      // ok
       this.ai.angle = halfWayTowardsStraigthAngle;
     } else {
-      this.ai.angle = 360 - angleBetweenThisAndTarget/2;
+      // ok
+      this.ai.angle = 90 - (90 + angleBetweenThisAndTarget)/2;
     }
   }
 };
