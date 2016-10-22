@@ -428,13 +428,30 @@ Gorilla.prototype.selectTargetAI = function() {
 };
 
 Gorilla.prototype.generateFirstGuessAI = function() {
-  this.ai.strength = 8;
+  var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
+  var distance = this.ai.target.position.dist(this.position);
+  this.ai.strength = (Math.pow(Math.abs(positionDiff.x), 0.5) + Math.pow(Math.abs(positionDiff.y), 0.5)) / 4;
 
   // target on the left or right?
-  if (this.ai.target.position.x < this.position.x) {
-    this.ai.angle = 135;
+  var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
+  
+  var angleBetweenThisAndTarget = degrees(atan(Math.abs(positionDiff.y/positionDiff.x)));
+
+  // starting from the angle between the line that connects this and target, got half way in the straigh angle direction  
+  var halfWayTowardsStraigthAngle = (90 - angleBetweenThisAndTarget)/2;
+  
+  if (positionDiff.x < 0) {
+    if (positionDiff.y < 0) {
+      this.ai.angle = 90 + halfWayTowardsStraigthAngle;
+    } else {
+      this.ai.angle = 180 + angleBetweenThisAndTarget/2;
+    }
   } else {
-    this.ai.angle = 45;
+    if (positionDiff.y < 0) {
+      this.ai.angle = halfWayTowardsStraigthAngle;
+    } else {
+      this.ai.angle = 360 - angleBetweenThisAndTarget/2;
+    }
   }
 };
 
