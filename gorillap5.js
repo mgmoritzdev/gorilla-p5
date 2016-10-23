@@ -15,8 +15,8 @@ var subtractAngle = false;
 var gravity = 9.81;
 var gravityScaleFactor = 1/60;
 var cannonLength = 20;
-var strengthOffset = 0.05;
-var angleOffset = 0.3;
+var strengthOffset = 0.15;
+var angleOffset = 0.9;
 var cannonFireSound;
 var explosionSound;
 var cannonFireSoundFile = 'assets/sounds/Tank Firing-SoundBible.com-998264747.mp3';
@@ -35,15 +35,19 @@ Vector2.prototype.dist = function(otherVector) {
     0.5);
 };
 
-var Gorilla = function(position, color, strength, angle, quadrant, npc) {
+var Gorilla = function(name, position, color, strength, angle, faceRight, npc) {
+  this.name = name;
   this.position = position;
   this.color = color;
   this.strength = strength;
   this.angle = angle;
-  this.textAlignment = quadrant === 1 ? LEFT : RIGHT;
-  this.textX = quadrant === 1 ? 10 : width - 60;
-  this.angleDirection = quadrant === 1 ? 1 : -1;
+
   this.npc = npc || false;
+  this.ai = {};
+
+  this.textAlignment = this.npc ? RIGHT : LEFT;
+  this.textX = this.npc ? width - 60 : 10;
+  this.angleDirection = this.npc ? 1 : 1;
 };
 
 function preload() {
@@ -73,12 +77,26 @@ function draw() {
 }
 
 function displayGameResult() {
-  var { color, strength, angle, textAlignment, textX } = gorillas[currentPlayerIndex];
-  
+
+  var gorilla;
+  var endGameText = '';
+
+  if (noMorePlayers()) {
+    var lastPlayerIndex = currentPlayerIndex === 0 ? 0 : currentPlayerIndex - 1;
+    gorilla = gorillas[lastPlayerIndex];
+
+    endGameText = 'Você perdeu!';
+  } else {
+    gorilla = gorillas[currentPlayerIndex];
+    endGameText = 'Parabéns!';
+  }
+
+  var { color, strength, angle, textAlignment, textX } = gorilla;
+
   textAlign(CENTER);
   fill(color);
   textSize(26);
-  text ('Parabéns!', width/2, height/2);
+  text (endGameText, width/2, height/2);
   textSize(14);
   text ('Enter para continuar', width/2, height/2 + 20);
 }
@@ -103,7 +121,7 @@ function drawBanana() {
 function drawGorillas() {
   gorillas.forEach(gorilla => {
     let { color, strength, angle, textAlignment, textX, position, angleDirection } = gorilla;
-  
+
     fill(color);
     stroke(color);
     strokeWeight(5);
@@ -145,15 +163,18 @@ function updateTarget() {
 
   var gorilla = gorillas[currentPlayerIndex];
   if (gorilla.npc) {
-    if (typeof(gorilla.target) === 'undefined') {
-      selectTargetAI();
-      generateFirstGuessAI();
-    } else {
-      setAimStrategyAI();
-      updateAimAI();
+    if (gorillas.indexOf(gorilla.ai.target) === -1) {
+      gorilla.selectTargetAI();
+      gorilla.generateFirstGuessAI();
+    } else if(!gorilla.aimDefined()) {
+      gorilla.setAimStrategyAI();
+      gorilla.updateAimAI();
+    } 
+
+    if(gorilla.isLocked()) {
+      throwBanana();
+      return;
     }
-    throwBanana();
-    return;
   }
 
   if (addStrength) {
@@ -167,10 +188,23 @@ function updateTarget() {
   } else if (subtractAngle) {
     gorilla.angle -= gorilla.angleDirection * angleOffset;
   }
+
+  gorilla.angle = wrapAngle(gorilla.angle);
+}
+
+function wrapAngle(angle) {
+  if (angle > 360) {
+    angle -= 360;
+  } else if (angle < 0) {
+    angle += 360;
+  }
+  
+  return angle;
 }
 
 function initializeBlueGorilla() {
   var newGorilla = new Gorilla(
+    'blue',
     new Vector2(random(0.1*width, 0.2*width), getRandomYPosition()),
     color(0,0,255),
     10,
@@ -182,10 +216,11 @@ function initializeBlueGorilla() {
 
 function initializeRedGorilla() {
   var newGorilla = new Gorilla(
+    'red',
     new Vector2(random(0.8*width, 0.9*width), getRandomYPosition()),
     color(255,0,0),
     10,
-    45,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -193,21 +228,11 @@ function initializeRedGorilla() {
 
 function initializeGreenGorilla() {
   var newGorilla = new Gorilla(
+    'green',
     new Vector2(random(0.45*width, 0.55*width), getRandomYPosition()),
     color(0,255,0),
     10,
-    45,
-    3,
-    true);
-  gorillas.push(newGorilla);
-}
-
-function initializeMagentaGorilla() {
-  var newGorilla = new Gorilla(
-    new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
-    color(255,255,0),
-    10,
-    45,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -215,10 +240,23 @@ function initializeMagentaGorilla() {
 
 function initializeYellowGorilla() {
   var newGorilla = new Gorilla(
-    new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
-    color(0,255,255),
+    'yellow',
+    new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
+    color(255,255,0),
     10,
-    45,
+    135,
+    3,
+    true);
+  gorillas.push(newGorilla);
+}
+
+function initializeMagentaGorilla() {
+  var newGorilla = new Gorilla(
+    'magenta',
+    new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
+    color(255,0,255),
+    10,
+    135,
     3,
     true);
   gorillas.push(newGorilla);
@@ -232,22 +270,29 @@ function updateBanana() {
 
   updateThrowResult();
   var enemyDestroyed = getEnemyDestroyed();
+  var enemyDestroyedIndex = gorillas.indexOf(enemyDestroyed);
 
   if (typeof(enemyDestroyed) !== 'undefined') {
+
     explosionSound.setVolume(0.3);
     explosionSound.play();
-    gorillas = gorillas.filter((x) => x !== enemyDestroyed);
+
+    if (enemyDestroyedIndex < currentPlayerIndex) {
+      currentPlayerIndex--;
+    }
+    gorillas = gorillas.filter(x => x !== enemyDestroyed);
     isBananaFlying = false;
+
     callNextPlayer();
 
-    if (checkWinState()) {
+    if (checkEndGameState()) {
       gameEnded = true;
     }
   }
 
   if (hitGround()) {
     isBananaFlying = false;
-    storeResultAI();
+    gorillas[currentPlayerIndex].storeResultAI();
     callNextPlayer();
     return;
   }
@@ -258,8 +303,12 @@ function updateBanana() {
   }
 }
 
-function checkWinState() {
-  return gorillas.length === 1;
+function checkEndGameState() {
+  return gorillas.length === 1 || noMorePlayers();
+}
+
+function noMorePlayers() {
+  return gorillas.filter(x => !x.npc).length === 0;
 }
 
 function callNextPlayer() {
@@ -281,16 +330,14 @@ function getEnemyDestroyed() {
 function updateThrowResult() {
   var currentGorilla = gorillas[currentPlayerIndex];
 
-  if (!currentGorilla.npc) {
+  if (!currentGorilla.npc || !isBananaFlying) {
     return;
   }
 
-  // if (Math.abs(bananaPosition.y - currentGorilla.target.position.y) < 10) {
-  if(currentGorilla.target.position.dist(bananaPosition) < currentGorilla.throwResult || typeof(currentGorilla.throwResult) === 'undefined') {
-    currentGorilla.throwResult = currentGorilla.target.position.dist(bananaPosition);
-    console.log(currentGorilla.throwResult);
+  if (typeof(currentGorilla.ai.throwResult) === 'undefined'){
+    currentGorilla.ai.throwResult = [];
   }
-  // }
+  currentGorilla.ai.throwResult.push(currentGorilla.ai.target.position.dist(bananaPosition));
 }
 
 function hitGround() {
@@ -375,92 +422,141 @@ function keyReleased() {
 */
 
 
-function selectTargetAI() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-  if (typeof(currentGorilla.target) === 'undefined') {
-    var targetIndex = Math.floor(random(gorillas.length - 1));
+Gorilla.prototype.selectTargetAI = function() {
+  var targetIndex = Math.floor(random(gorillas.length - 1));
 
-    // discard itself
-    if (targetIndex >= currentPlayerIndex) {
-      targetIndex++;
-    }
-
-    currentGorilla.target = gorillas[targetIndex];
+  // discard itself
+  if (targetIndex >= currentPlayerIndex) {
+    targetIndex++;
   }
-}
 
-function generateFirstGuessAI() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-  currentGorilla.strength = 8;
+  this.ai.target = gorillas[targetIndex];
+};
+
+Gorilla.prototype.generateFirstGuessAI = function() {
+  var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
+  var distance = this.ai.target.position.dist(this.position);
+  this.ai.strength = Math.pow(Math.abs(positionDiff.x), 0.5) / 2 +
+    (positionDiff.y < 0 ? Math.pow(Math.abs(positionDiff.y), 0.5) / 4 : 0);
 
   // target on the left or right?
-  if (currentGorilla.target.position.x > currentGorilla.position) {
-    if (currentGorilla.quadrant === 1) {
-      currentGorilla.angle = 45;
+  var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
+  
+  var angleBetweenThisAndTarget = Math.abs(degrees(atan(Math.abs(positionDiff.y/positionDiff.x))));
+
+  // starting from the angle between the line that connects this and target, got half way in the straigh angle direction  
+  var halfWayTowardsStraigthAngle = (90 - angleBetweenThisAndTarget)/2;
+  
+  if (positionDiff.x < 0) {
+    if (positionDiff.y < 0) {
+      this.ai.angle = 90 + halfWayTowardsStraigthAngle;
     } else {
-      currentGorilla.angle = 135;
+      this.ai.angle = 90 + (90 + angleBetweenThisAndTarget)/2;
     }
   } else {
-    if (currentGorilla.quadrant === 1) {
-      currentGorilla.angle = 135;
+    if (positionDiff.y < 0) {
+      // ok
+      this.ai.angle = halfWayTowardsStraigthAngle;
     } else {
-      currentGorilla.angle = 45;
+      // ok
+      this.ai.angle = 90 - (90 + angleBetweenThisAndTarget)/2;
     }
   }
-}
+};
 
 // need improvements, would be better if I could know which side of target was the thrown
-function storeResultAI() {
-  var currentGorilla = gorillas[currentPlayerIndex];
-
+Gorilla.prototype.storeResultAI = function() {
   // if target exists store the distance, otherwhise the target has been destroyed
-  if (currentGorilla.target) {
-    if (typeof(currentGorilla.previousThrowResult) !== 'undefined') {
-      currentGorilla.aimProgress = currentGorilla.previousThrowResult - currentGorilla.throwResult;
+  if (this.ai.target) {
+    if (typeof(this.ai.previousThrowResult) !== 'undefined') {
+      this.ai.aimProgress = getAverage(this.ai.previousThrowResult.sort().slice(0,3)) - getAverage(this.ai.throwResult.sort().slice(0,3));
     }
-    currentGorilla.previousThrowResult = currentGorilla.throwResult;
-    currentGorilla.throwResult = undefined;
+    this.ai.previousThrowResult = this.ai.throwResult;
+    this.ai.throwResult = undefined;
+    this.ai.aimDefined = false;
   } else {
-    currentGorilla.throwResult = undefined;
-    currentGorilla.previousThrowResult = undefined;
+    this.ai.throwResult = undefined;
+    this.ai.previousThrowResult = undefined;
+    this.ai.aimDefined = false;
   }
+};
+
+function getAverage(array) {
+  var sum = array.reduce(function(a, b) { return a + b; });
+  return sum/array.length;
 }
 
 /* Consider two strategies that can be combined: angle strategy and strength strategy */
-function setAimStrategyAI() {
-  var currentGorilla = gorillas[currentPlayerIndex];
+// all combinations of strength and angle are possible:
+// strength: [-1, 0, 1] * strength
+// angle: [-1, 0, 1] * angle
+Gorilla.prototype.setAimStrategyAI = function() {
   var randomOffsetFactor = random(5, 20);
 
-  // first set strategy
-  if (typeof(currentGorilla.aimStrategy) === 'undefined') {
-    currentGorilla.aimStrategy = {
-      angle: angleOffset * randomOffsetFactor,
-      strength: strengthOffset * randomOffsetFactor
-    };
-
+  if (!this.isStrategySet()) {
+    this.setStrategy(0, 1);
     return;
   }
 
-  var strengthStrategy = 1;
-  var angleStrategy = 1;
-
   // aim diverging
-  if (currentGorilla.aimProgress <= 0) {
-    // flip a coin
-    if (Math.floor(random(2)) > 0) {
-      strengthStrategy *= -1;
-    } else {
-      angleStrategy *= -1;
-    }
-
-    currentGorilla.aimStrategy.angle *= angleStrategy;
-    currentGorilla.aimStrategy.strength *= strengthStrategy;
+  if (this.ai.aimProgress <= 0) {
+    this.setNextStrategy();
   }
-}
+};
 
-function updateAimAI() {
-  var currentGorilla = gorillas[currentPlayerIndex];
+Gorilla.prototype.isStrategySet = function() {
+  return typeof(this.ai.aimStrategy) !== 'undefined';
+};
 
-  currentGorilla.angle += currentGorilla.aimStrategy.angle;
-  currentGorilla.strength += currentGorilla.aimStrategy.strength;
-}
+Gorilla.prototype.setNextStrategy = function() {
+  var strategies = [-1, 0, 1];
+  var currStrength = this.getDirection(this.ai.aimStrategy.strength);
+  var currAngle = this.getDirection(this.ai.aimStrategy.angle);
+
+  if (currAngle === 1) {
+    if (currStrength === 1) {
+      this.setStrategy(-1, -1);
+    }
+    else {
+      this.setStrategy(currStrength + 1, -1);
+    }
+  } else {
+    this.setStrategy(currStrength, currAngle + 1);
+  }
+};
+
+Gorilla.prototype.getDirection = function(value) {
+  if (value > 0) {
+    return 1;
+  } else if (value < 0) {
+    return -1;
+  } else {
+    return 0;
+  }
+};
+
+Gorilla.prototype.setStrategy = function(strengthStrategy, angleStrategy) {
+  this.ai.aimStrategy = {
+    strength: strengthOffset * strengthStrategy * 10,
+    angle: angleOffset * angleStrategy * 10
+  };
+};
+
+Gorilla.prototype.updateAimAI = function() {
+  this.ai.angle = wrapAngle(this.ai.angle + this.ai.aimStrategy.angle);
+  this.ai.strength += this.ai.aimStrategy.strength;
+  this.ai.aimDefined = true;
+};
+
+Gorilla.prototype.aimDefined = function() {
+  return this.ai.aimDefined;
+};
+
+Gorilla.prototype.isLocked = function() {
+  subtractAngle = (this.angle - this.ai.angle > angleOffset);
+  addAngle = (this.ai.angle - this.angle > angleOffset);
+  addStrength = (this.ai.strength - this.strength > strengthOffset);
+  subtractStrength = (this.strength - this.ai.strength  > strengthOffset);
+
+  return !subtractAngle && !addAngle && !subtractStrength && !addStrength;
+};
