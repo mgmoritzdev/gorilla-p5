@@ -6,7 +6,6 @@ var wind;
 var bananaDiameter = 10;
 var gorillaDiameter = 20;
 var isBananaFlying = false;
-var gameStarted = true;
 var gameEnded = false;
 var addStrength = false;
 var subtractStrength = false;
@@ -146,7 +145,6 @@ function resetGame() {
   initializeYellowGorilla();
   currentPlayerIndex = 0;
   isBananaFlying = false;
-  gameStarted = true;
   gameEnded = false;
   addStrength = false;
   subtractStrength = false;
@@ -189,6 +187,7 @@ function updateTarget() {
     gorilla.angle -= gorilla.angleDirection * angleOffset;
   }
 
+  gorilla.strength = wrapStrength(gorilla.strength);
   gorilla.angle = wrapAngle(gorilla.angle);
 }
 
@@ -198,14 +197,24 @@ function wrapAngle(angle) {
   } else if (angle < 0) {
     angle += 360;
   }
-  
+
   return angle;
+}
+
+function wrapStrength(strength) {
+  if (strength > 20) {
+    strength = 20;
+  } else if (strength < 0) {
+    strength = 0;
+  }
+
+  return strength;
 }
 
 function initializeBlueGorilla() {
   var newGorilla = new Gorilla(
     'blue',
-    new Vector2(random(0.1*width, 0.2*width), getRandomYPosition()),
+    new Vector2(random(0.1 * width, 0.2 * width), getRandomYPosition()),
     color(0,0,255),
     10,
     45,
@@ -217,7 +226,7 @@ function initializeBlueGorilla() {
 function initializeRedGorilla() {
   var newGorilla = new Gorilla(
     'red',
-    new Vector2(random(0.8*width, 0.9*width), getRandomYPosition()),
+    new Vector2(random(0.8 * width, 0.9 * width), getRandomYPosition()),
     color(255,0,0),
     10,
     135,
@@ -229,7 +238,7 @@ function initializeRedGorilla() {
 function initializeGreenGorilla() {
   var newGorilla = new Gorilla(
     'green',
-    new Vector2(random(0.45*width, 0.55*width), getRandomYPosition()),
+    new Vector2(random(0.45 * width, 0.55 * width), getRandomYPosition()),
     color(0,255,0),
     10,
     135,
@@ -241,7 +250,7 @@ function initializeGreenGorilla() {
 function initializeYellowGorilla() {
   var newGorilla = new Gorilla(
     'yellow',
-    new Vector2(random(0.3*width, 0.4*width), getRandomYPosition()),
+    new Vector2(random(0.3 * width, 0.4 * width), getRandomYPosition()),
     color(255,255,0),
     10,
     135,
@@ -253,7 +262,7 @@ function initializeYellowGorilla() {
 function initializeMagentaGorilla() {
   var newGorilla = new Gorilla(
     'magenta',
-    new Vector2(random(0.6*width, 0.7*width), getRandomYPosition()),
+    new Vector2(random(0.6 * width, 0.7 * width), getRandomYPosition()),
     color(255,0,255),
     10,
     135,
@@ -263,7 +272,7 @@ function initializeMagentaGorilla() {
 }
 
 function getRandomYPosition() {
-  return random(0.5 * height, 0.9*height);
+  return random(0.5 * height, 0.9 * height);
 }
 
 function updateBanana() {
@@ -356,10 +365,12 @@ function keyPressed() {
     handleRestart();
     return;
   }
+
+  if (gorillas[currentPlayerIndex].npc) {
+    return;
+  }
+
   handleBananaThrow();
-
-
-  gameStarted = true;
   handleControls();
 }
 
@@ -544,7 +555,7 @@ Gorilla.prototype.setStrategy = function(strengthStrategy, angleStrategy) {
 
 Gorilla.prototype.updateAimAI = function() {
   this.ai.angle = wrapAngle(this.ai.angle + this.ai.aimStrategy.angle);
-  this.ai.strength += this.ai.aimStrategy.strength;
+  this.ai.strength = wrapStrength(this.ai.strength + this.ai.aimStrategy.strength);
   this.ai.aimDefined = true;
 };
 
@@ -553,6 +564,7 @@ Gorilla.prototype.aimDefined = function() {
 };
 
 Gorilla.prototype.isLocked = function() {
+  // side effect
   subtractAngle = (this.angle - this.ai.angle > angleOffset);
   addAngle = (this.ai.angle - this.angle > angleOffset);
   addStrength = (this.ai.strength - this.strength > strengthOffset);
