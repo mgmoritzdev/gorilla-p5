@@ -1,4 +1,4 @@
-define(["vector2"], function (Vector2) {
+define(['vector2', 'geometry'], function (Vector2, geometry) {
 
   var Gorilla = function(name, position, color, strength, angle, npc) {
     this.name = name;
@@ -10,8 +10,6 @@ define(["vector2"], function (Vector2) {
     this.npc = npc || false;
     this.ai = {};
 
-    this.textAlignment = this.npc ? RIGHT : LEFT;
-    this.textX = this.npc ? width - 60 : 10;
     this.angleDirection = this.npc ? 1 : 1;
   };
 
@@ -27,7 +25,7 @@ define(["vector2"], function (Vector2) {
   */
 
   Gorilla.prototype.selectTargetAI = function(gorillas, currentPlayerIndex) {
-    var targetIndex = Math.floor(random(gorillas.length - 1));
+    var targetIndex = Math.floor(Math.random() * (gorillas.length - 1));
 
     // discard itself
     if (targetIndex >= currentPlayerIndex) {
@@ -43,10 +41,7 @@ define(["vector2"], function (Vector2) {
     this.ai.strength = Math.pow(Math.abs(positionDiff.x), 0.5) / 2 +
       (positionDiff.y < 0 ? Math.pow(Math.abs(positionDiff.y), 0.5) / 4 : 0);
 
-    // target on the left or right?
-    var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
-
-    var angleBetweenThisAndTarget = Math.abs(degrees(atan(Math.abs(positionDiff.y / positionDiff.x))));
+    var angleBetweenThisAndTarget = Math.abs(geometry.degrees(Math.atan(Math.abs(positionDiff.y / positionDiff.x))));
 
     // starting from the angle between the line that connects this and target, got half way in the straigh angle direction
     var halfWayTowardsStraigthAngle = (90 - angleBetweenThisAndTarget) / 2;
@@ -95,7 +90,7 @@ define(["vector2"], function (Vector2) {
   // strength: [-1, 0, 1] * strength
   // angle: [-1, 0, 1] * angle
   Gorilla.prototype.setAimStrategyAI = function(strengthOffset, angleOffset) {
-    var randomOffsetFactor = random(5, 20);
+    var randomOffsetFactor = Math.floor(Math.random() * 16 + 5);
 
     if (!this.isStrategySet()) {
       this.setStrategy(strengthOffset, angleOffset, 0, 1);
@@ -147,7 +142,7 @@ define(["vector2"], function (Vector2) {
   };
 
   Gorilla.prototype.updateAimAI = function() {
-    this.ai.angle = wrapAngle(this.ai.angle + this.ai.aimStrategy.angle);
+    this.ai.angle = geometry.wrapAngle(this.ai.angle + this.ai.aimStrategy.angle);
     this.ai.strength = wrapStrength(this.ai.strength + this.ai.aimStrategy.strength);
     this.ai.aimDefined = true;
   };
@@ -166,6 +161,14 @@ define(["vector2"], function (Vector2) {
     return getAxis(strengthAxis, sensitivity);
   };
 
+  Gorilla.prototype.addStrength = function (amount) {
+    this.strength = wrapStrength(this.strength + amount);
+  };
+
+  Gorilla.prototype.addAngle = function (amount) {
+    this.angle = geometry.wrapAngle(this.angle + amount);
+  };
+
   function getAxis(axis, sensitivity) {
     if (axis > sensitivity) {
       return 1;
@@ -174,6 +177,26 @@ define(["vector2"], function (Vector2) {
     } else {
       return 0;
     }
+  }
+
+  function wrapAngle(angle) {
+    if (angle > 360) {
+      angle -= 360;
+    } else if (angle < 0) {
+      angle += 360;
+    }
+
+    return angle;
+  }
+
+  function wrapStrength(strength) {
+    if (strength > 20) {
+      strength = 20;
+    } else if (strength < 0) {
+      strength = 0;
+    }
+
+    return strength;
   }
 
   return Gorilla;

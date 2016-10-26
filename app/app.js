@@ -1,39 +1,42 @@
 define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) {
 
+  let processing;
+
+  var gorillas;
+  var currentPlayerIndex;
+  var bananaPosition;
+  var bananaVelocity;
+  var wind;
+  var bananaDiameter = 10;
+  var gorillaDiameter = 20;
+  var isBananaFlying = false;
+  var gameEnded = false;
+  var strengthAxis = 0;
+  var angleAxis = 0;
+
+  var gravity = 9.81;
+  var gravityScaleFactor = 1 / 60;
+  var cannonLength = 20;
+  var strengthOffset = 0.15;
+  var angleOffset = 0.9;
+  var cannonFireSound;
+  var explosionSound;
+  var cannonFireSoundFile = 'assets/sounds/Tank Firing-SoundBible.com-998264747.mp3';
+  var explosionSoundFile = 'assets/sounds/Bomb 3-SoundBible.com-1260663209.mp3';
+
   var p5Instance = new p5(function( sketch ) {
-
-    var gorillas;
-    var currentPlayerIndex;
-    var bananaPosition;
-    var bananaVelocity;
-    var wind;
-    var bananaDiameter = 10;
-    var gorillaDiameter = 20;
-    var isBananaFlying = false;
-    var gameEnded = false;
-    var strengthAxis = 0;
-    var angleAxis = 0;
-
-    var gravity = 9.81;
-    var gravityScaleFactor = 1 / 60;
-    var cannonLength = 20;
-    var strengthOffset = 0.15;
-    var angleOffset = 0.9;
-    var cannonFireSound;
-    var explosionSound;
-    var cannonFireSoundFile = 'assets/sounds/Tank Firing-SoundBible.com-998264747.mp3';
-    var explosionSoundFile = 'assets/sounds/Bomb 3-SoundBible.com-1260663209.mp3';
 
     sketch.preload = function() {
       cannonFireSound = sketch.loadSound(cannonFireSoundFile);
       explosionSound = sketch.loadSound(explosionSoundFile);
-    }
+    };
 
     sketch.setup = function() {
+      processing = sketch;
       sketch.createCanvas(600,600);
-      sketch.resetGame();
+      resetGame();
       sketch.frameRate(60);
-    }
+    };
 
     sketch.draw = function() {
       sketch.background(255);
@@ -47,11 +50,10 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       } else {
         displayGameResult();
       }
-    }
-
-    sketch.keyPressed = function () {
-      
     };
+
+    sketch.keyPressed = keyPressed;
+    sketch.keyReleased = keyReleased;
   }, 'sketch-div'); 
 
   function displayGameResult() {
@@ -69,49 +71,53 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       endGameText = 'Parabéns!';
     }
 
-    var { color, strength, angle, textAlignment, textX } = gorilla;
+    var { color, strength, angle } = gorilla;
 
-    textAlign(CENTER);
-    fill(color);
-    textSize(26);
-    text (endGameText, width / 2, height / 2);
-    textSize(14);
-    text ('Enter para continuar', width / 2, height / 2 + 20);
+    processing.textAlign(processing.CENTER);
+    processing.fill(color);
+    processing.textSize(26);
+    processing.text (endGameText, processing.width / 2, processing.height / 2);
+    processing.textSize(14);
+    processing.text ('Enter para continuar', processing.width / 2, processing.height / 2 + 20);
   }
 
   function drawTarget() {
-    noStroke();
-    var { color, strength, angle, textAlignment, textX } = gorillas[currentPlayerIndex];
-    fill(color);
-    textAlign(textAlignment);
-    textSize(14);
-    text ('Força: ' + strength.toFixed(2), textX, 25);
-    text ('Ângulo: ' + Math.abs(angle % 90).toFixed(2), textX, 60);
-    fill(255);
+    processing.noStroke();
+    var { color, strength, angle, npc } = gorillas[currentPlayerIndex];
+
+    const textAlignment = npc ? processing.RIGHT : processing.LEFT;
+    const textX = npc ? processing.width - 60 : 10;
+
+    processing.fill(color);
+    processing.textAlign(textAlignment);
+    processing.textSize(14);
+    processing.text ('Força: ' + strength.toFixed(2), textX, 25);
+    processing.text ('Ângulo: ' + Math.abs(angle % 90).toFixed(2), textX, 60);
+    processing.fill(255);
   }
 
   function drawBanana() {
     if (isBananaFlying) {
-      ellipse(bananaPosition.x, bananaPosition.y, bananaDiameter, bananaDiameter);
+      processing.ellipse(bananaPosition.x, bananaPosition.y, bananaDiameter, bananaDiameter);
     }
   }
 
   function drawGorillas() {
     gorillas.forEach(gorilla => {
-      let { color, strength, angle, textAlignment, textX, position, angleDirection } = gorilla;
+      const { color, strength, angle, position, angleDirection } = gorilla;
 
-      fill(color);
-      stroke(color);
-      strokeWeight(5);
-      ellipse(position.x, position.y, gorillaDiameter, gorillaDiameter);
-      line(
+      processing.fill(color);
+      processing.stroke(color);
+      processing.strokeWeight(5);
+      processing.ellipse(position.x, position.y, gorillaDiameter, gorillaDiameter);
+      processing.line(
         position.x,
         position.y,
-        position.x + cannonLength * angleDirection * cos(radians(angle)),
-        position.y + cannonLength * -sin(radians(angle)));
-      fill(255);
-      strokeWeight(1);
-      stroke(1);
+        position.x + cannonLength * processing.cos(processing.radians(angle)),
+        position.y + cannonLength * -processing.sin(processing.radians(angle)));
+      processing.fill(255);
+      processing.strokeWeight(1);
+      processing.stroke(1);
     });
   }
 
@@ -128,7 +134,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     gameEnded = false;
     strengthAxis = 0;
     angleAxis = 0;
-    wind = random(-0.1,0.1);
+    wind = processing.random(-0.1,0.1);
   }
 
   function updateTarget() {
@@ -156,39 +162,16 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       }
     }
 
-    gorilla.strength += strengthAxis * strengthOffset;
-    gorilla.angle += angleAxis * angleOffset;
-
-    gorilla.strength = wrapStrength(gorilla.strength);
-    gorilla.angle = wrapAngle(gorilla.angle);
-  }
-
-  function wrapAngle(angle) {
-    if (angle > 360) {
-      angle -= 360;
-    } else if (angle < 0) {
-      angle += 360;
-    }
-
-    return angle;
-  }
-
-  function wrapStrength(strength) {
-    if (strength > 20) {
-      strength = 20;
-    } else if (strength < 0) {
-      strength = 0;
-    }
-
-    return strength;
+    gorilla.addStrength(strengthAxis * strengthOffset);
+    gorilla.addAngle(angleAxis * angleOffset);
   }
 
   function initalizeGorila(gorillaColor, angle, npc) {
-    var xPos = (gorillas.length * .2 + .1) * width;
+    var xPos = (gorillas.length * 0.2 + 0.1) * processing.width;
     var newGorilla = new Gorilla(
       gorillaColor,
       new Vector2(xPos, getRandomYPosition()),
-      color(gorillaColor),
+      processing.color(gorillaColor),
       10,
       angle,
       npc);
@@ -196,7 +179,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   }
 
   function getRandomYPosition() {
-    return random(0.5 * height, 0.9 * height);
+    return processing.random(0.5 * processing.height, 0.9 * processing.height);
   }
 
   function updateBanana() {
@@ -275,12 +258,47 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function hitGround() {
     if (isBananaFlying) {
-      return bananaPosition.y > height ||
-        bananaPosition.x > width * 1.5 ||
-        bananaPosition.x < -0.5 * width;
+      return bananaPosition.y > processing.height ||
+        bananaPosition.x > processing.width * 1.5 ||
+        bananaPosition.x < -0.5 * processing.width;
     }
 
     return false;
+  }
+
+  function handleBananaThrow() {
+    if (processing.keyCode === processing.ENTER && !isBananaFlying) {
+      throwBanana();
+    }
+  }
+
+  function throwBanana() {
+    isBananaFlying = true;
+    var gorilla = gorillas[currentPlayerIndex];
+    bananaPosition = gorilla.position;
+    bananaVelocity = new Vector2(
+      gorilla.strength * gorilla.angleDirection * processing.cos(processing.radians(gorilla.angle)),
+      gorilla.strength * -processing.sin(processing.radians(gorilla.angle)));
+    cannonFireSound.setVolume(0.3);
+    cannonFireSound.play();
+  }
+
+  function handleRestart() {
+    if (processing.keyCode === processing.ENTER && gameEnded) {
+      resetGame();
+    }
+  }
+
+  function handleControls() {
+    if (processing.keyCode === processing.UP_ARROW) {
+      strengthAxis = 1;
+    } else if (processing.keyCode === processing.DOWN_ARROW) {
+      strengthAxis = -1;
+    } else if (processing.keyCode === processing.LEFT_ARROW) {
+      angleAxis = 1;
+    } else if (processing.keyCode === processing.RIGHT_ARROW) {
+      angleAxis = -1;
+    }
   }
 
   function keyPressed() {
@@ -298,49 +316,14 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     handleControls();
   }
 
-  function handleBananaThrow() {
-    if (keyCode === ENTER && !isBananaFlying) {
-      throwBanana();
-    }
-  }
-
-  function throwBanana() {
-    isBananaFlying = true;
-    var gorilla = gorillas[currentPlayerIndex];
-    bananaPosition = gorilla.position;
-    bananaVelocity = new Vector2(
-      gorilla.strength * gorilla.angleDirection * cos(radians(gorilla.angle)),
-      gorilla.strength * -sin(radians(gorilla.angle)));
-    cannonFireSound.setVolume(0.3);
-    cannonFireSound.play();
-  }
-
-  function handleRestart() {
-    if (keyCode === ENTER && gameEnded) {
-      resetGame();
-    }
-  }
-
-  function handleControls() {
-    if (keyCode === UP_ARROW) {
-      strengthAxis = 1;
-    } else if (keyCode === DOWN_ARROW) {
-      strengthAxis = -1;
-    } else if (keyCode === LEFT_ARROW) {
-      angleAxis = 1;
-    } else if (keyCode === RIGHT_ARROW) {
-      angleAxis = -1;
-    }
-  }
-
   function keyReleased() {
-    if (keyCode === UP_ARROW) {
+    if (processing.keyCode === processing.UP_ARROW) {
       strengthAxis = 0;
-    } else if (keyCode === DOWN_ARROW) {
+    } else if (processing.keyCode === processing.DOWN_ARROW) {
       strengthAxis = 0;
-    } else if (keyCode === LEFT_ARROW) {
+    } else if (processing.keyCode === processing.LEFT_ARROW) {
       angleAxis = 0;
-    } else if (keyCode === RIGHT_ARROW) {
+    } else if (processing.keyCode === processing.RIGHT_ARROW) {
       angleAxis = 0;
     }
   }
