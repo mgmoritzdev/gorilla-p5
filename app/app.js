@@ -14,6 +14,18 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   var strengthAxis = 0;
   var angleAxis = 0;
 
+  var touchControlActive = false;
+  var touchControlDrag = false;
+  var touchControlCenter = new Vector2(300,300);
+  var touchControlButtonDist = 100;
+  var touchControlActivationDist = 15;
+  var touchControlStrengthUp = new Vector2(touchControlCenter.x, touchControlCenter.y - touchControlButtonDist);
+  var touchControlStrengthDown = new Vector2(touchControlCenter.x, touchControlCenter.y + touchControlButtonDist);
+  var touchControlAngleCW = new Vector2(touchControlCenter.x + touchControlButtonDist, touchControlCenter.y);
+  var touchControlAngleCCW = new Vector2(touchControlCenter.x - touchControlButtonDist, touchControlCenter.y);
+  var touchControlRadius = 50;
+  var touchControlPosition = touchControlCenter;
+
   var gravity = 9.81;
   var gravityScaleFactor = 1 / 60;
   var cannonLength = 20;
@@ -26,35 +38,121 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   var p5Instance = new p5(function( sketch ) {
 
-    sketch.preload = function() {
-      cannonFireSound = sketch.loadSound(cannonFireSoundFile);
-      explosionSound = sketch.loadSound(explosionSoundFile);
-    };
-
-    sketch.setup = function() {
-      processing = sketch;
-      sketch.createCanvas(600,600);
-      resetGame();
-      sketch.frameRate(60);
-    };
-
-    sketch.draw = function() {
-      sketch.background(255);
-
-      if (!gameEnded) {
-        drawGorillas();
-        updateTarget();
-        updateBanana();
-        drawBanana();
-        drawTarget();
-      } else {
-        displayGameResult();
-      }
-    };
+    processing = sketch;
+    sketch.preload = preload;
+    sketch.setup = setup;
+    sketch.draw = draw;
 
     sketch.keyPressed = keyPressed;
     sketch.keyReleased = keyReleased;
-  }, 'sketch-div'); 
+    sketch.mousePressed = mousePressed;
+    sketch.mouseDragged = mouseDragged;
+    sketch.mouseReleased = mouseReleased;
+  }, 'sketch-div');
+
+  function preload() {
+    cannonFireSound = processing.loadSound(cannonFireSoundFile);
+    explosionSound = processing.loadSound(explosionSoundFile);
+  }
+
+  function setup() {    
+    processing.createCanvas(600,600);
+    resetGame();
+    processing.frameRate(60);
+  }
+
+  function draw() {
+    processing.background(255);
+
+    if (!gameEnded) {
+      drawGorillas();      
+      updateTarget();
+      displayTouchControl();
+      updateBanana();
+      drawBanana();
+      drawTarget();
+    } else {
+      displayGameResult();
+    }
+  }
+  
+  // stub
+  function displayTouchControl() {
+    if (gorillas[currentPlayerIndex].npc) {
+      return;
+    }
+
+    if (touchControlActive) {
+      touchControlPosition.x = processing.mouseX;
+      touchControlPosition.y = processing.mouseY;
+
+      diplayTouchControlTargets();
+      processing.strokeWeight(0);
+      processing.fill(processing.color('red'));
+      processing.ellipse(touchControlPosition.x, touchControlPosition.y, touchControlRadius, touchControlRadius);
+    } else {
+      processing.fill(processing.color('blue'));
+      processing.ellipse(touchControlCenter.x, touchControlCenter.y, touchControlRadius, touchControlRadius);
+    }
+  }
+
+  // stub
+  function mousePressed() {
+    touchControlPosition = new Vector2(processing.mouseX, processing.mouseY);
+    touchControlActive = touchControlPosition.dist(touchControlCenter) <= touchControlRadius;
+  }
+
+  function mouseDragged() {
+    touchControlDrag = true;
+    // detect if some action was activated
+    touchControlPosition.x = processing.mouseX;
+    touchControlPosition.y = processing.mouseY;
+
+    if (touchControlStrengthUp.dist(touchControlPosition) <= touchControlActivationDist){
+      strengthAxis = 1;
+    } else if (touchControlStrengthDown.dist(touchControlPosition) <= touchControlActivationDist){
+      strengthAxis = -1;
+    } else {
+      strengthAxis = 0;
+    }
+
+    if (touchControlAngleCW.dist(touchControlPosition) <= touchControlActivationDist){
+      angleAxis = -1;
+    } else if (touchControlAngleCCW.dist(touchControlPosition) <= touchControlActivationDist){
+      angleAxis = 1;
+    } else {
+      angleAxis = 0;
+    }
+  }
+
+  // stub
+  function mouseReleased() {
+    if (gameEnded) {
+      resetGame();
+    }
+
+    if (!touchControlDrag && touchControlActive) {
+      throwBanana();
+    }
+
+    touchControlActive = false;
+    touchControlDrag = false;
+    touchControlPosition = touchControlCenter;
+    strengthAxis = 0;
+    angleAxis = 0;
+  }
+
+  function diplayTouchControlTargets() {
+    processing.strokeWeight(1);
+    processing.fill(processing.color(0,0,0,0));
+    // touchControlPosition.x = processing.mouseX;
+    // touchControlPosition.y = processing.mouseY;
+    processing.ellipse(touchControlStrengthUp.x, touchControlStrengthUp.y, touchControlRadius, touchControlRadius);
+    processing.ellipse(touchControlStrengthDown.x, touchControlStrengthDown.y, touchControlRadius, touchControlRadius);
+    processing.ellipse(touchControlAngleCW.x, touchControlAngleCW.y, touchControlRadius, touchControlRadius);
+    processing.ellipse(touchControlAngleCCW.x, touchControlAngleCCW.y, touchControlRadius, touchControlRadius);
+  }
+
 
   function displayGameResult() {
 
@@ -113,8 +211,8 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       processing.line(
         position.x,
         position.y,
-        position.x + cannonLength * processing.cos(processing.radians(angle)),
-        position.y + cannonLength * -processing.sin(processing.radians(angle)));
+        position.x + (cannonLength + strength / 2) * processing.cos(processing.radians(angle)),
+        position.y + (cannonLength + strength / 2) * -processing.sin(processing.radians(angle)));
       processing.fill(255);
       processing.strokeWeight(1);
       processing.stroke(1);
