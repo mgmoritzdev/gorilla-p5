@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/mgmoritzdev/gorilla-p5#readme",
   "dependencies": {
-    "p5": "^0.5.4"
+    "p5": "^0.5.4",
+    "requirejs": "^2.3.2"
   }
 }
