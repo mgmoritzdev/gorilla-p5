@@ -4,7 +4,7 @@ require.config({
   paths: {
     //libs
     'requirejs': '../node_modules/requirejs/require',
-    'p5': '../node_modules/p5/lib/p5',
+    'p5': ['https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/p5.min', '../node_modules/p5/lib/p5'],
 
     //modules
     'app': 'app',
@@ -13,7 +13,7 @@ require.config({
     'geometry': 'geometry',
 
     //plugins
-    'p5.sound': '../node_modules/p5/lib/addons/p5.sound'
+    'p5.sound': ['https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/addons/p5.sound.min', '../node_modules/p5/lib/addons/p5.sound']
   }
 });
 
