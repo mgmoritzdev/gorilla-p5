@@ -7,28 +7,24 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   var bananaPosition;
   var bananaVelocity;
   var wind;
-  var bananaDiameter = 10;
-  var gorillaDiameter = 20;
+  var bananaDiameter = 15;
+  var gorillaDiameter = 40;
   var isBananaFlying = false;
   var gameEnded = false;
   var strengthAxis = 0;
   var angleAxis = 0;
 
+  var touchControlCenter;
   var touchControlActive = false;
   var touchControlDrag = false;
-  var touchControlCenter = new Vector2(300,300);
   var touchControlButtonDist = 100;
   var touchControlActivationDist = 15;
-  var touchControlStrengthUp = new Vector2(touchControlCenter.x, touchControlCenter.y - touchControlButtonDist);
-  var touchControlStrengthDown = new Vector2(touchControlCenter.x, touchControlCenter.y + touchControlButtonDist);
-  var touchControlAngleCW = new Vector2(touchControlCenter.x + touchControlButtonDist, touchControlCenter.y);
-  var touchControlAngleCCW = new Vector2(touchControlCenter.x - touchControlButtonDist, touchControlCenter.y);
   var touchControlRadius = 50;
   var touchControlPosition = touchControlCenter;
 
   var gravity = 9.81;
   var gravityScaleFactor = 1 / 60;
-  var cannonLength = 20;
+  var cannonLength = 30;
   var strengthOffset = 0.15;
   var angleOffset = 0.9;
   var cannonFireSound;
@@ -56,7 +52,10 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   }
 
   function setup() {    
-    processing.createCanvas(600,600);
+    processing.createCanvas(window.innerWidth, window.innerHeight);
+    
+    touchControlCenter = new Vector2(processing.width / 2, processing.height / 2);
+    
     resetGame();
     processing.frameRate(60);
   }
@@ -65,7 +64,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     processing.background(255);
 
     if (!gameEnded) {
-      drawGorillas();      
+      drawGorillas();
       updateTarget();
       displayTouchControl();
       updateBanana();
@@ -76,9 +75,8 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     }
   }
   
-  // stub
   function displayTouchControl() {
-    if (gorillas[currentPlayerIndex].npc) {
+    if (getCurrentGorilla().npc || isBananaFlying) {
       return;
     }
 
@@ -86,17 +84,20 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       touchControlPosition.x = processing.mouseX;
       touchControlPosition.y = processing.mouseY;
 
-      diplayTouchControlTargets();
       processing.strokeWeight(0);
       processing.fill(processing.color('red'));
       processing.ellipse(touchControlPosition.x, touchControlPosition.y, touchControlRadius, touchControlRadius);
     } else {
-      processing.fill(processing.color('blue'));
+      processing.noStroke();
+      processing.fill(processing.color('red'));
       processing.ellipse(touchControlCenter.x, touchControlCenter.y, touchControlRadius, touchControlRadius);
+      processing.fill(processing.color('white'));
+      processing.ellipse(touchControlCenter.x, touchControlCenter.y, 0.7 * touchControlRadius, 0.7 * touchControlRadius);
+      processing.fill(processing.color('red'));
+      processing.ellipse(touchControlCenter.x, touchControlCenter.y, 0.3 * touchControlRadius, 0.3 * touchControlRadius);
     }
   }
 
-  // stub
   function mousePressed() {
     touchControlPosition = new Vector2(processing.mouseX, processing.mouseY);
     touchControlActive = touchControlPosition.dist(touchControlCenter) <= touchControlRadius;
@@ -104,22 +105,21 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function mouseDragged() {
     touchControlDrag = true;
-    // detect if some action was activated
+    
     touchControlPosition.x = processing.mouseX;
     touchControlPosition.y = processing.mouseY;
 
-    if (touchControlStrengthUp.dist(touchControlPosition) <= touchControlActivationDist){
-      strengthAxis = 1;
-    } else if (touchControlStrengthDown.dist(touchControlPosition) <= touchControlActivationDist){
-      strengthAxis = -1;
+    var yDiff = touchControlCenter.y - touchControlPosition.y;
+    var xDiff = touchControlCenter.x - touchControlPosition.x;
+
+    if (Math.abs(yDiff) > processing.height/20) {
+      strengthAxis = 2 * yDiff / processing.height;
     } else {
       strengthAxis = 0;
     }
 
-    if (touchControlAngleCW.dist(touchControlPosition) <= touchControlActivationDist){
-      angleAxis = -1;
-    } else if (touchControlAngleCCW.dist(touchControlPosition) <= touchControlActivationDist){
-      angleAxis = 1;
+    if (Math.abs(xDiff) > processing.width/20) {
+      angleAxis = 2 * xDiff / processing.width;
     } else {
       angleAxis = 0;
     }
@@ -131,7 +131,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       resetGame();
     }
 
-    if (!touchControlDrag && touchControlActive) {
+    if (!touchControlDrag && touchControlActive && !isBananaFlying) {
       throwBanana();
     }
 
@@ -141,18 +141,6 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     strengthAxis = 0;
     angleAxis = 0;
   }
-
-  function diplayTouchControlTargets() {
-    processing.strokeWeight(1);
-    processing.fill(processing.color(0,0,0,0));
-    // touchControlPosition.x = processing.mouseX;
-    // touchControlPosition.y = processing.mouseY;
-    processing.ellipse(touchControlStrengthUp.x, touchControlStrengthUp.y, touchControlRadius, touchControlRadius);
-    processing.ellipse(touchControlStrengthDown.x, touchControlStrengthDown.y, touchControlRadius, touchControlRadius);
-    processing.ellipse(touchControlAngleCW.x, touchControlAngleCW.y, touchControlRadius, touchControlRadius);
-    processing.ellipse(touchControlAngleCCW.x, touchControlAngleCCW.y, touchControlRadius, touchControlRadius);
-  }
-
 
   function displayGameResult() {
 
@@ -165,7 +153,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
       endGameText = 'Você perdeu!';
     } else {
-      gorilla = gorillas[currentPlayerIndex];
+      gorilla = getCurrentGorilla();
       endGameText = 'Parabéns!';
     }
 
@@ -181,7 +169,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function drawTarget() {
     processing.noStroke();
-    var { color, strength, angle, npc } = gorillas[currentPlayerIndex];
+    var { color, strength, angle, npc } = getCurrentGorilla();
 
     const textAlignment = npc ? processing.RIGHT : processing.LEFT;
     const textX = npc ? processing.width - 60 : 10;
@@ -202,21 +190,32 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function drawGorillas() {
     gorillas.forEach(gorilla => {
-      const { color, strength, angle, position, angleDirection } = gorilla;
+      const { color, position } = gorilla;
+
+      var cannonEnd = getGorillaCannonTip(gorilla);
 
       processing.fill(color);
       processing.stroke(color);
-      processing.strokeWeight(5);
+      processing.strokeWeight(10);
       processing.ellipse(position.x, position.y, gorillaDiameter, gorillaDiameter);
       processing.line(
         position.x,
         position.y,
-        position.x + (cannonLength + strength / 2) * processing.cos(processing.radians(angle)),
-        position.y + (cannonLength + strength / 2) * -processing.sin(processing.radians(angle)));
+        cannonEnd.x,
+        cannonEnd.y);
       processing.fill(255);
       processing.strokeWeight(1);
       processing.stroke(1);
     });
+  }
+
+  function getGorillaCannonTip(gorilla) {
+    const { color, strength, angle, position } = gorilla;
+
+    return new Vector2(
+      position.x + (cannonLength + strength) * processing.cos(processing.radians(angle)),
+      position.y + (cannonLength + strength) * -processing.sin(processing.radians(angle))
+    );
   }
 
   function resetGame() {
@@ -241,7 +240,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       return;
     }
 
-    var gorilla = gorillas[currentPlayerIndex];
+    var gorilla = getCurrentGorilla();
     if (gorilla.npc) {
       if (gorillas.indexOf(gorilla.ai.target) === -1) {
         gorilla.selectTargetAI(gorillas, currentPlayerIndex);
@@ -280,6 +279,10 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     return processing.random(0.5 * processing.height, 0.9 * processing.height);
   }
 
+  function getCurrentGorilla() {
+    return gorillas[currentPlayerIndex];
+  }
+
   function updateBanana() {
 
     updateThrowResult();
@@ -306,7 +309,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
     if (hitGround()) {
       isBananaFlying = false;
-      gorillas[currentPlayerIndex].storeResultAI();
+      getCurrentGorilla().storeResultAI();
       callNextPlayer();
       return;
     }
@@ -331,7 +334,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function getEnemyDestroyed() {
     if (isBananaFlying) {
-      var otherGorillas = gorillas.filter(x => x !== gorillas[currentPlayerIndex]);
+      var otherGorillas = gorillas.filter(x => x !== getCurrentGorilla());
       var hitGorilla = otherGorillas
         .filter(x => x.position.dist(bananaPosition) < (bananaDiameter / 2 + gorillaDiameter / 2));
 
@@ -342,7 +345,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   }
 
   function updateThrowResult() {
-    var currentGorilla = gorillas[currentPlayerIndex];
+    var currentGorilla = getCurrentGorilla();
 
     if (!currentGorilla.npc || !isBananaFlying) {
       return;
@@ -364,7 +367,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     return false;
   }
 
-  function handleBananaThrow() {
+  function handleKeyBananaThrow() {
     if (processing.keyCode === processing.ENTER && !isBananaFlying) {
       throwBanana();
     }
@@ -372,8 +375,8 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function throwBanana() {
     isBananaFlying = true;
-    var gorilla = gorillas[currentPlayerIndex];
-    bananaPosition = gorilla.position;
+    var gorilla = getCurrentGorilla();
+    bananaPosition = getGorillaCannonTip(gorilla);
     bananaVelocity = new Vector2(
       gorilla.strength * gorilla.angleDirection * processing.cos(processing.radians(gorilla.angle)),
       gorilla.strength * -processing.sin(processing.radians(gorilla.angle)));
@@ -381,13 +384,13 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     cannonFireSound.play();
   }
 
-  function handleRestart() {
+  function handleKeyRestart() {
     if (processing.keyCode === processing.ENTER && gameEnded) {
       resetGame();
     }
   }
 
-  function handleControls() {
+  function handleKeyControls() {
     if (processing.keyCode === processing.UP_ARROW) {
       strengthAxis = 1;
     } else if (processing.keyCode === processing.DOWN_ARROW) {
@@ -402,16 +405,16 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   function keyPressed() {
 
     if (gameEnded) {
-      handleRestart();
+      handleKeyRestart();
       return;
     }
 
-    if (gorillas[currentPlayerIndex].npc) {
+    if (getCurrentGorilla().npc) {
       return;
     }
 
-    handleBananaThrow();
-    handleControls();
+    handleKeyBananaThrow();
+    handleKeyControls();
   }
 
   function keyReleased() {
