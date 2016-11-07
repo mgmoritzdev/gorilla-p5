@@ -6,10 +6,14 @@ define([], function () {
 
   Vector2.prototype.dist = function(otherVector) {
     return Math.pow(
-      Math.pow(
-        Math.abs(this.x - otherVector.x), 2) +
-        Math.pow(Math.abs(this.y - otherVector.y),2),
+      Math.pow(this.x - otherVector.x, 2) +
+        Math.pow(this.y - otherVector.y,2),
       0.5);
+  };
+
+  Vector2.prototype.sqDist = function(otherVector) {
+    return Math.pow(this.x - otherVector.x, 2) +
+        Math.pow(this.y - otherVector.y,2);
   };
 
   return Vector2;

@@ -9,13 +9,12 @@ define([], function () {
   };
 
   const wrapAngle = function (angle) {
-    if (angle > 360) {
-      angle -= 360;
-    } else if (angle < 0) {
-      angle += 360;
+    
+    if (angle >= 0 && angle < 360) {
+      return angle;
     }
 
-    return angle;
+    return wrapAngle(angle >= 360 ? angle - 360 : angle + 360);
   };
 
   return {
