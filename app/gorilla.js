@@ -9,8 +9,6 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 
     this.npc = npc || false;
     this.ai = {};
-
-    this.angleDirection = this.npc ? 1 : 1;
   };
 
   /* AI Functions
@@ -54,16 +52,13 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
       }
     } else {
       if (positionDiff.y < 0) {
-        // ok
         this.ai.angle = angleBetweenThisAndTarget + halfWayTowardsStraigthAngle;
       } else {
-        // ok
         this.ai.angle = 90 - (90 + angleBetweenThisAndTarget) / 2;
       }
     }
   };
 
-  // need improvements, would be better if I could know which side of target was the thrown
   Gorilla.prototype.storeResultAI = function() {
     // if target exists store the distance, otherwhise the target has been destroyed
     if (this.ai.target) {

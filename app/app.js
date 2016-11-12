@@ -378,7 +378,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     var gorilla = getCurrentGorilla();
     bananaPosition = getGorillaCannonTip(gorilla);
     bananaVelocity = new Vector2(
-      gorilla.strength * gorilla.angleDirection * processing.cos(processing.radians(gorilla.angle)),
+      gorilla.strength * processing.cos(processing.radians(gorilla.angle)),
       gorilla.strength * -processing.sin(processing.radians(gorilla.angle)));
     cannonFireSound.setVolume(0.3);
     cannonFireSound.play();

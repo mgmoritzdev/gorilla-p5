@@ -11,6 +11,8 @@ require.config({
     'gorilla': 'gorilla',
     'vector2': 'vector2',
     'geometry': 'geometry',
+    'banana': 'banana',
+    'physics': 'physics',
 
     //plugins
     'p5.sound': ['https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/addons/p5.sound.min', '../node_modules/p5/lib/addons/p5.sound']
