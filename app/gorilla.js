@@ -99,7 +99,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 
     // aim diverging
     if (this.ai.aimProgress <= 0) {
-      this.setNextStrategy();
+      this.setNextStrategy(strengthOffset, angleOffset);
     }
   };
 
@@ -107,20 +107,20 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
     return typeof(this.ai.aimStrategy) !== 'undefined';
   };
 
-  Gorilla.prototype.setNextStrategy = function() {
+  Gorilla.prototype.setNextStrategy = function(strengthOffset, angleOffset) {
     var strategies = [-1, 0, 1];
     var currStrength = this.getDirection(this.ai.aimStrategy.strength);
     var currAngle = this.getDirection(this.ai.aimStrategy.angle);
 
     if (currAngle === 1) {
       if (currStrength === 1) {
-        this.setStrategy(-1, -1);
+        this.setStrategy(strengthOffset, angleOffset, -1, -1);
       }
       else {
-        this.setStrategy(currStrength + 1, -1);
+        this.setStrategy(strengthOffset, angleOffset, currStrength + 1, -1);
       }
     } else {
-      this.setStrategy(currStrength, currAngle + 1);
+      this.setStrategy(strengthOffset, angleOffset, currStrength, currAngle + 1);
     }
   };
 
@@ -177,16 +177,6 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
     } else {
       return 0;
     }
-  }
-
-  function wrapAngle(angle) {
-    if (angle > 360) {
-      angle -= 360;
-    } else if (angle < 0) {
-      angle += 360;
-    }
-
-    return angle;
   }
 
   function wrapStrength(strength) {

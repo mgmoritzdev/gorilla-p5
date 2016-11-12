@@ -9,7 +9,11 @@ define([], function () {
   };
 
   const wrapAngle = function (angle) {
-    
+
+    if (isNaN(angle)) {
+      throw new Error('The argument angle passed is not a number!');
+    }
+
     if (angle >= 0 && angle < 360) {
       return angle;
     }
