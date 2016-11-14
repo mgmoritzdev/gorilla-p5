@@ -10,15 +10,6 @@ define(['physics', 'vector2'],function (Physics, Vector2){
       expect(physics.rotation).toBeDefined();
 
     });
-
-    it('a physics object defining position and velocity parameters', function () {
-      
-      const physics = new Physics(new Vector2(1,1), 45);
-      
-      expect(physics.position).toEqual(new Vector2(1,1));
-      expect(physics.rotation).toEqual(45);
-
-    });
   });
 
   describe('Should allow to change it\'s internal state changing: ', function () {
@@ -31,6 +22,16 @@ define(['physics', 'vector2'],function (Physics, Vector2){
       expect(physics.position).toEqual(new Vector2(0, 2));
 
     });
+
+    it('the velocity', function () {
+      
+      const physics = new Physics();
+      physics.setVelocity(new Vector2(0, 2));
+      
+      expect(physics.velocity).toEqual(new Vector2(0, 2));
+
+    });
+
     it('the rotation', function () {
       
       const physics = new Physics();
@@ -69,6 +70,55 @@ define(['physics', 'vector2'],function (Physics, Vector2){
       expect(physics.colliders[0]).toBe(collider);
       
     });
+
+    it('acceleration', function() {
+      
+      const physics = new Physics();      
+      physics.setAcceleration(new Vector2(1, 1));
+
+      expect(physics.acceleration).toBeDefined();
+
+    });
+  });
+
+  describe('Should allow removing properties such as: ', function() {
+
+    it('rigid body', function () {
+      
+      const mass = 10;
+      const gravity = 9.81;
+
+      const physics = new Physics();
+      physics.addRigidBody(mass, gravity);
+      physics.removeRigidBody(0);
+
+      expect(physics.mass).not.toBeDefined();
+      expect(physics.gravity).not.toBeDefined();
+
+    });
+
+    it('collider', function () {
+      
+      const collider = 'collider';
+
+      const physics = new Physics();
+      physics.addCollider(collider);
+      physics.removeCollider(collider);
+
+      expect(physics.colliders).toBeDefined();
+      expect(physics.colliders.length).toEqual(0);
+      
+    });
+
+    it('acceleration', function() {
+      
+      const physics = new Physics();      
+      physics.setAcceleration(new Vector2(1, 1));
+      physics.removeAcceleration();
+
+      expect(physics.acceleration).not.toBeDefined();
+
+    });
   });
 
   describe('Should allow control the object with operations such as: ', function () {
@@ -78,12 +128,44 @@ define(['physics', 'vector2'],function (Physics, Vector2){
       const initialPosition = new Vector2(10, 10);
       const displacement = new Vector2(5, 5);
 
-      const physics = new Physics(initialPosition);
+      const physics = new Physics();
+      physics.setPosition(initialPosition);
       physics.move(displacement);
 
       expect(physics.position).toEqual(new Vector2(15, 15));
 
     });
+  });
+
+  describe('Should allow updates: ', function () {
+
+    it('with fixed velocity', function () {
+      const initialPosition = new Vector2(8, 5);
+      const velocity = new Vector2(10, 10);
+
+      const physics = new Physics();
+      physics.setPosition(initialPosition);
+      physics.setVelocity(velocity);
+
+      physics.update();
+
+      expect(physics.position).toEqual(new Vector2(18, 15));
+
+      physics.update();
+
+      expect(physics.position).toEqual(new Vector2(28, 25));
+
+    });
+
+    it('with constant acceleration' , function() {
+    });
+
+    it('with rigidbody' , function() {
+    });
+
+    it('with rigidbody a rigidbody and a force applied' , function() {
+    });
+
   });
 
 });
