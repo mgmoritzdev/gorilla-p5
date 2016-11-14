@@ -13,6 +13,7 @@ require.config({
     'geometry': 'geometry',
     'banana': 'banana',
     'physics': 'physics',
+    'collider': 'collider',
 
     //plugins
     'p5.sound': ['https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.4/addons/p5.sound.min', '../node_modules/p5/lib/addons/p5.sound']

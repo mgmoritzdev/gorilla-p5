@@ -1,7 +1,15 @@
 define(['vector2'], function (Vector2) {
-  var Physics = function(position, velocity) {
+  var Physics = function(position, rotation) {
     this.position = position || new Vector2(0,0);
-    this.velocity = velocity || new Vector2(0,0);
+    this.rotation = rotation || 0;
+  };
+
+  Physics.prototype.setPosition = function (position) {
+    this.position = position;
+  };
+
+  Physics.prototype.setRotation = function (rotation) {
+    this.rotation = rotation;
   };
 
   Physics.prototype.move = function (displacement) {
@@ -13,7 +21,6 @@ define(['vector2'], function (Vector2) {
     this.gravity = gravity;
   };
 
-  // TODO: implement colliders
   Physics.prototype.addCollider = function(collider) {
     if (typeof(this.colliders) === 'undefined') {
       this.colliders = [];

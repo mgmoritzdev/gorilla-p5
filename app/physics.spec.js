@@ -1,26 +1,50 @@
 define(['physics', 'vector2'],function (Physics, Vector2){
-  describe('Object creation', function () {
+  describe('Should allow to create: ', function () {
 
-    it('Should create a physics object', function () {
+    it('a simple physics object', function () {
       
       const physics = new Physics();
       
       expect(physics).toBeDefined();
       expect(physics.position).toBeDefined();
-      expect(physics.velocity).toBeDefined();
+      expect(physics.rotation).toBeDefined();
 
     });
 
-    it('Should allow position and velocity parameters', function () {
+    it('a physics object defining position and velocity parameters', function () {
       
-      const physics = new Physics(new Vector2(1,1), new Vector2(2,2));
+      const physics = new Physics(new Vector2(1,1), 45);
       
       expect(physics.position).toEqual(new Vector2(1,1));
-      expect(physics.velocity).toEqual(new Vector2(2,2));
+      expect(physics.rotation).toEqual(45);
+
+    });
+  });
+
+  describe('Should allow to change it\'s internal state changing: ', function () {
+
+    it('the position', function () {
+      
+      const physics = new Physics();
+      physics.setPosition(new Vector2(0, 2));
+      
+      expect(physics.position).toEqual(new Vector2(0, 2));
+
+    });
+    it('the rotation', function () {
+      
+      const physics = new Physics();
+      physics.setRotation(45);
+      
+      expect(physics.rotation).toEqual(45);
 
     });
 
-    it('Should allow creation of a rigid body', function () {
+  });
+
+  describe('Should allow adding properties such as: ', function() {
+
+    it('rigid body', function () {
       
       const mass = 10;
       const gravity = 9.81;
@@ -33,7 +57,7 @@ define(['physics', 'vector2'],function (Physics, Vector2){
 
     });
 
-    it('Should allow creation of a collider', function () {
+    it('collider', function () {
       
       const collider = 'collider';
 
@@ -47,9 +71,9 @@ define(['physics', 'vector2'],function (Physics, Vector2){
     });
   });
 
-  describe('Object manipulation', function () {
+  describe('Should allow control the object with operations such as: ', function () {
 
-    it('Should allow to move the object', function () {
+    it('move', function () {
       
       const initialPosition = new Vector2(10, 10);
       const displacement = new Vector2(5, 5);
