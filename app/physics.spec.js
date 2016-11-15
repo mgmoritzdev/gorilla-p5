@@ -79,6 +79,14 @@ define(['physics', 'vector2'],function (Physics, Vector2){
       expect(physics.acceleration).toBeDefined();
 
     });
+
+	  it('force', function() {
+
+		  const physics = new Physics();
+		  physics.addForce(new Vector2(1, 1));
+
+		  expect(physics.forces.length).toBeGreaterThan(0);
+	  });
   });
 
   describe('Should allow removing properties such as: ', function() {
@@ -90,6 +98,10 @@ define(['physics', 'vector2'],function (Physics, Vector2){
 
       const physics = new Physics();
       physics.addRigidBody(mass, gravity);
+
+	    expect(physics.forces).toBeDefined();
+	    
+	    
       physics.removeRigidBody(0);
 
       expect(physics.mass).not.toBeDefined();
@@ -103,13 +115,31 @@ define(['physics', 'vector2'],function (Physics, Vector2){
 
       const physics = new Physics();
       physics.addCollider(collider);
+
+	    expect(physics.colliders.length).toBeGreaterThan(0);
+	    
       physics.removeCollider(collider);
 
-      expect(physics.colliders).toBeDefined();
       expect(physics.colliders.length).toEqual(0);
       
     });
 
+    it('force', function () {
+      
+      const force = new Vector2();
+
+      const physics = new Physics();
+	    physics.addForce(force);
+
+	    expect(physics.forces.length).toBeGreaterThan(0);
+	    
+      physics.removeForce(force);
+
+      expect(physics.forces.length).toEqual(0);
+      
+    });
+
+	  
     it('acceleration', function() {
       
       const physics = new Physics();      
@@ -158,13 +188,52 @@ define(['physics', 'vector2'],function (Physics, Vector2){
     });
 
     it('with constant acceleration' , function() {
+
+	    const acc = new Vector2(0, 9.81);
+	    const physics = new Physics();
+
+	    physics.setAcceleration(acc);
+
+	    physics.update();
+
+	    expect(physics.velocity).toEqual(new Vector2(0, 9.81));
+	    
     });
 
     it('with rigidbody' , function() {
+
+	    const mass = 10;
+	    const gravity = 9.81;
+	    const physics = new Physics();
+
+	    physics.addRigidBody(mass, gravity);
+
+	    // the first update changes the acceleration, but not the velocity
+	    physics.update();
+
+	    // in this update, the previous set acceleration is applied to change velocity
+	    physics.update();
+
+	    expect(physics.velocity.y).toBeCloseTo(9.81, 2);
     });
 
-    it('with rigidbody a rigidbody and a force applied' , function() {
-    });
+	  it('with a force applied', function() {
+
+		  const mass = 10;
+		  const gravity = 0; // to isolate effect of the force
+		  const physics = new Physics();
+
+		  physics.addRigidBody(mass, gravity);
+		  physics.addForce(new Vector2(10, 10));
+		  
+		  // see explanation in previous test
+		  physics.update();
+		  physics.update();
+
+		  expect(physics.velocity.x).toBeCloseTo(1);
+		  expect(physics.velocity.y).toBeCloseTo(1);
+		  
+	  });
 
   });
 

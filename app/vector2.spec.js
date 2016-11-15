@@ -31,6 +31,16 @@ define(['vector2'],function (Vector2){
       expect(p1).toEqual(p3);
     });
   });
+	describe('Multiply a vector with', function() {
+		it('a constant', function() {
+			const p1 = new Vector2(0, 230);
+			const c = 1/10;
+
+			p1.multiplyConst(c);
+			expect(p1).toEqual(new Vector2(0, 23));
+		});
+
+	});
   describe('Euclidean Distance', function () {
     it('dist', function () {
       var p1 = new Vector2(0, 0);

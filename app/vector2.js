@@ -13,6 +13,11 @@ define([], function () {
     this.y += otherVector.y;
   };
 
+	Vector2.prototype.multiplyConst = function(c) {
+		this.x *= c;
+		this.y *= c;
+	};
+
   Vector2.prototype.dist = function(otherVector) {
     return Math.pow(
       Math.pow(this.x - otherVector.x, 2) +
