@@ -18,11 +18,13 @@ define(['vector2'], function (Vector2) {
   };
 
   Physics.prototype.setAcceleration = function (acceleration) {
-    this.acceleration = acceleration;
+    this.fixedAcceleration = acceleration.copy();
+	  this.acceleration = acceleration;
   };
 
   Physics.prototype.removeAcceleration = function () {
-    this.acceleration = undefined;
+    this.fixedAcceleration = undefined;
+	  this.acceleration = undefined;
   };
 
   Physics.prototype.addForce = function (force) {
@@ -42,7 +44,6 @@ define(['vector2'], function (Vector2) {
 	Physics.prototype.removeForce = function(force) {
 		
 		if (typeof(this.forces) === 'undefined') {
-			// nothing to do here
 			return;
 		}
 
@@ -82,8 +83,8 @@ define(['vector2'], function (Vector2) {
   };
 
   Physics.prototype.removeCollider = function(collider) {
-    if (typeof(this.colliders) === 'undefined') {
-      // nothing to do here
+
+	  if (typeof(this.colliders) === 'undefined') {
       return;
     }
 
@@ -105,14 +106,16 @@ define(['vector2'], function (Vector2) {
 
 	Physics.prototype.updateAccelerationDueForces = function() {
 
+		this.acceleration = new Vector2();
+		
 		if (typeof(this.forces) === 'undefined') {
 			return;
 		}
 		
-		if (typeof(this.acceleration) === 'undefined') {
-			this.acceleration = new Vector2(0, 0);
+		if (typeof(this.fixedAcceleration) !== 'undefined') {
+			this.acceleration.addVector(this.fixedAcceleration);
 		}
-				
+		
 		for(var i = 0; i < this.forces.length; i++) {
 			const acc = this.forces[i].copy();
 			acc.multiplyConst(1/this.mass);
@@ -126,4 +129,5 @@ define(['vector2'], function (Vector2) {
 	};
 
   return Physics;
+	
 });

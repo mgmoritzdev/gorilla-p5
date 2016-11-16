@@ -1,7 +1,9 @@
-define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) {
+define(["p5", "vector2", "gorilla", "banana", "p5.sound"], function(p5, Vector2, Gorilla, Banana) {
 
   let processing;
 
+	let banana;
+	
   var gorillas;
   var currentPlayerIndex;
   var bananaPosition;
@@ -67,7 +69,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
       drawGorillas();
       updateTarget();
       displayTouchControl();
-      updateBanana();
+	    updateBanana();
       drawBanana();
       drawTarget();
     } else {
@@ -185,6 +187,10 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
   function drawBanana() {
     if (isBananaFlying) {
       processing.ellipse(bananaPosition.x, bananaPosition.y, bananaDiameter, bananaDiameter);
+
+	    if (typeof(banana) !== 'undefined')
+			  banana.render(processing);
+
     }
   }
 
@@ -285,7 +291,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
   function updateBanana() {
 
-    updateThrowResult();
+	  updateThrowResult();
     var enemyDestroyed = getEnemyDestroyed();
     var enemyDestroyedIndex = gorillas.indexOf(enemyDestroyed);
 
@@ -317,6 +323,10 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     if (isBananaFlying) {
       bananaPosition = { x: bananaPosition.x + bananaVelocity.x, y: bananaPosition.y + bananaVelocity.y};
       bananaVelocity = { x: bananaVelocity.x + wind, y: bananaVelocity.y + gravity * gravityScaleFactor };
+
+	    if (typeof(banana) !== 'undefined')
+			  banana.update();
+
     }
   }
 
@@ -340,7 +350,7 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
 
       if (hitGorilla.length > 0) {
         return hitGorilla[0];
-      }
+      }  
     }
   }
 
@@ -380,6 +390,16 @@ define(["p5", "vector2", "gorilla", "p5.sound"], function(p5, Vector2, Gorilla) 
     bananaVelocity = new Vector2(
       gorilla.strength * processing.cos(processing.radians(gorilla.angle)),
       gorilla.strength * -processing.sin(processing.radians(gorilla.angle)));
+
+	  var bananaMass = 1;
+	  banana = new Banana(bananaMass, gravity * gravityScaleFactor, bananaDiameter);
+	  
+	  banana.physics.setPosition(getGorillaCannonTip(gorilla));
+	  banana.physics.setVelocity(new Vector2(
+		  gorilla.strength * processing.cos(processing.radians(gorilla.angle)),
+      gorilla.strength * -processing.sin(processing.radians(gorilla.angle))));
+	  
+	  
     cannonFireSound.setVolume(0.3);
     cannonFireSound.play();
   }

@@ -232,6 +232,15 @@ define(['physics', 'vector2'],function (Physics, Vector2){
 
 		  expect(physics.velocity.x).toBeCloseTo(1);
 		  expect(physics.velocity.y).toBeCloseTo(1);
+
+		  // multiple updates should not increase acceleration
+		  const acc = physics.acceleration.copy();
+
+		  for(var i = 0; i < 15; i++) {
+			  physics.update();			  
+		  }
+
+		  expect(physics.acceleration).toEqual(acc);
 		  
 	  });
 

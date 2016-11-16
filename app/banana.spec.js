@@ -43,5 +43,13 @@ define(['banana', 'vector2'],function (Banana, Vector2) {
 			expect(banana.update).toBeDefined();
 
 		});
+
+		it('render', function() {
+
+			expect(banana.render).toBeDefined();
+			
+		});
+		
 	});
+	
 });
