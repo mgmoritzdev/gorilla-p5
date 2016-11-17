@@ -1,11 +1,12 @@
-define(['physics', 'circularCollider'], function (Physics, CircularCollider) {
+define(['physics', 'circularCollider'], function (Physics, Collider) {
 
 	var Banana = function(mass, gravity, size) {
     this.physics = new Physics();
 	  this.physics.addRigidBody(mass, gravity);
 		this.size = size;
-
-		//const collider = new CircularCollider();
+		
+		const collider = new Collider();
+		this.physics.addCollider(collider);
   };
 
 	Banana.prototype.update = function() {

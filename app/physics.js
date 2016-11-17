@@ -79,6 +79,7 @@ define(['vector2'], function (Vector2) {
     if (typeof(this.colliders) === 'undefined') {
       this.colliders = [];
     }
+	  collider.setPosition(this.position);
     this.colliders.push(collider);
   };
 

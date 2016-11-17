@@ -1,5 +1,15 @@
 define(['physics', 'vector2'],function (Physics, Vector2){
-  describe('Should allow to create: ', function () {
+
+	
+	let collider;
+
+	// mock collider
+	beforeEach(function() {
+		collider = {};
+		collider.setPosition = function() {};
+	});
+
+	describe('Should allow to create: ', function () {
 
     it('a simple physics object', function () {
       
@@ -44,7 +54,7 @@ define(['physics', 'vector2'],function (Physics, Vector2){
   });
 
   describe('Should allow adding properties such as: ', function() {
-
+	  
     it('rigid body', function () {
       
       const mass = 10;
@@ -59,10 +69,8 @@ define(['physics', 'vector2'],function (Physics, Vector2){
     });
 
     it('collider', function () {
-      
-      const collider = 'collider';
 
-      const physics = new Physics();
+	    const physics = new Physics();
       physics.addCollider(collider);
 
       expect(physics.colliders).toBeDefined();
@@ -111,8 +119,6 @@ define(['physics', 'vector2'],function (Physics, Vector2){
 
     it('collider', function () {
       
-      const collider = 'collider';
-
       const physics = new Physics();
       physics.addCollider(collider);
 
