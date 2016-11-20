@@ -6,6 +6,7 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
 		this.size = size;
 		
 		const collider = new Collider();
+		collider.setDiameter(size);
 		this.physics.addCollider(collider);
   };
 

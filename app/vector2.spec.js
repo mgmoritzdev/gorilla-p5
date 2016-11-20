@@ -1,4 +1,5 @@
 define(['vector2'],function (Vector2){
+
   describe('Copy constructor:', function () {
     
     var p1 = new Vector2(1, 4);
@@ -12,8 +13,8 @@ define(['vector2'],function (Vector2){
       expect(p1).toEqual(p2);
     });
   });
-  describe('Add vectors:', function () {
-    it('add a zero vector should not change value', function () {
+  describe('Should be able to', function () {
+    it('add a zero vector without change its original value', function () {
       var p1 = new Vector2(0, 1);
       var p2 = new Vector2(0, 0);
       var p3 = p1.copy();
@@ -21,7 +22,7 @@ define(['vector2'],function (Vector2){
       p1.addVector(p2);
       expect(p1).toEqual(p3);
     });
-    it('Should add the x and y components', function () {
+    it('add the x and y components', function () {
       var p1 = new Vector2(0, 1);
       var p2 = new Vector2(1, 0);
       var p3 = new Vector2(1, 1);
@@ -31,6 +32,21 @@ define(['vector2'],function (Vector2){
       expect(p1).toEqual(p3);
     });
   });
+	describe('Should be able to', function() {
+		it('subtract a vector', function() {
+			var p1 = new Vector2(0, 1);
+			var p2 = new Vector2(1, 1);
+			var p3 = new Vector2(4, 10);
+			var p4 = new Vector2(2, 3);
+
+			p1.subtractVector(p2);
+			expect(p1).toEqual(new Vector2(-1, 0));
+
+			p3.subtractVector(p4);
+			expect(p3).toEqual(new Vector2(2, 7));
+			
+		});
+	});
 	describe('Multiply a vector with', function() {
 		it('a constant', function() {
 			const p1 = new Vector2(0, 230);
@@ -71,4 +87,15 @@ define(['vector2'],function (Vector2){
       expect(p1.sqDist(p6)).toEqual(18);
     });
   });
+	describe('Should properties like', function() {
+		it('magnitude', function() {
+			var p1 = new Vector2(0, 0);
+      var p2 = new Vector2(0, 1);
+      var p3 = new Vector2(1, 1);
+
+			expect(p1.magnitude()).toEqual(0);
+			expect(p2.magnitude()).toEqual(1);
+			expect(p3.magnitude()).toBeCloseTo(1.41, 2);
+		});
+	});
 });

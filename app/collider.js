@@ -2,6 +2,7 @@ define(['vector2'], function(Vector2) {
 
 	var Collider = function() {
 		this.collidersToCheck = [];
+		this.static = false;
 	};
 
 	Collider.prototype.setPosition = function(position) {
@@ -13,25 +14,13 @@ define(['vector2'], function(Vector2) {
 		this.position = position || new Vector2();
 
 	};
-	
-	Collider.prototype.addColliderToCheck = function(collider) {
-		if (!(collider instanceof Collider)) {
-			throw new Error("Cannot add an object other than collider to the list of colliders to check agains");
-		}
-		this.collidersToCheck.push(collider);
+
+	Collider.prototype.setType = function(type) {
+		this.type = type;
 	};
 
-	Collider.prototype.removeColliderToCheck = function(collider) {
-		if (typeof(this.collidersToCheck) === 'undefined') {
-			return;
-		}
-
-		const index = this.collidersToCheck.indexOf(collider);
-
-		if (index > -1) {
-			this.collidersToCheck.splice(index, 1);
-		}
-
+	Collider.prototype.setStatic = function() {
+		this.static = true;
 	};
 	
 	return Collider;

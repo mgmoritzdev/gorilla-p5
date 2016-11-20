@@ -13,6 +13,12 @@ define([], function () {
     this.y += otherVector.y;
   };
 
+	Vector2.prototype.subtractVector = function(otherVector) {
+		const auxVec = otherVector.copy();
+		auxVec.multiplyConst(-1);
+		this.addVector(auxVec);
+	};
+
 	Vector2.prototype.multiplyConst = function(c) {
 		this.x *= c;
 		this.y *= c;
@@ -30,5 +36,9 @@ define([], function () {
         Math.pow(this.y - otherVector.y,2);
   };
 
+	Vector2.prototype.magnitude = function() {
+		return this.dist(new Vector2());
+	};
+	
   return Vector2;
 });
