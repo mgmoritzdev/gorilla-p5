@@ -1,6 +1,6 @@
-define(['vector2', 'geometry'], function (Vector2, geometry) {
+define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2, geometry, Physics, Collider) {
 
-  var Gorilla = function(name, position, color, strength, angle, npc) {
+  var Gorilla = function(name, position, color, strength, angle, npc, mass, size) {
     this.name = name;
     this.position = position;
     this.color = color;
@@ -9,6 +9,21 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 
     this.npc = npc || false;
     this.ai = {};
+
+
+	  this.destroy = false;
+	  this.physics = new Physics();
+	  this.physics.setPosition(this.position);
+	  this.physics.addRigidBody(mass, size);
+	  const collider = new Collider();
+	  collider.setDiameter(size);
+	  collider.setStatic(true);
+	  collider.onCollision = function(collision) {
+		  this.destroy = true;
+		  console.log('gorilla destroyed');
+	  };
+
+	  this.physics.addCollider(collider);
   };
 
   /* AI Functions

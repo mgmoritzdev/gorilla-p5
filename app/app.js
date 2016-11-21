@@ -1,4 +1,4 @@
-define(["p5", "vector2", "gorilla", "banana", "p5.sound"], function(p5, Vector2, Gorilla, Banana) {
+define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], function(p5, Vector2, Gorilla, Banana, cm) {
 
   let processing;
 
@@ -277,7 +277,9 @@ define(["p5", "vector2", "gorilla", "banana", "p5.sound"], function(p5, Vector2,
       processing.color(gorillaColor),
       10,
       angle,
-      npc);
+      npc,
+	    10,
+	    40);
     gorillas.push(newGorilla);
   }
 
@@ -324,9 +326,10 @@ define(["p5", "vector2", "gorilla", "banana", "p5.sound"], function(p5, Vector2,
       bananaPosition = { x: bananaPosition.x + bananaVelocity.x, y: bananaPosition.y + bananaVelocity.y};
       bananaVelocity = { x: bananaVelocity.x + wind, y: bananaVelocity.y + gravity * gravityScaleFactor };
 
-	    if (typeof(banana) !== 'undefined')
-			  banana.update();
-
+	    if (typeof(banana) !== 'undefined') {
+		    banana.update();
+		    cm.update();
+	    }
     }
   }
 

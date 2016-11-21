@@ -1,12 +1,11 @@
-define(['physics', 'vector2'],function (Physics, Vector2){
+define(['physics', 'vector2', 'collider'],function (Physics, Vector2, Collider){
 
 	
 	let collider;
 
 	// mock collider
 	beforeEach(function() {
-		collider = {};
-		collider.setPosition = function() {};
+		collider = new Collider();
 	});
 
 	describe('Should allow to create: ', function () {

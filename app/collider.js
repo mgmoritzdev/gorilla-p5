@@ -1,7 +1,6 @@
 define(['vector2'], function(Vector2) {
 
 	var Collider = function() {
-		this.collidersToCheck = [];
 		this.static = false;
 	};
 
@@ -19,8 +18,8 @@ define(['vector2'], function(Vector2) {
 		this.type = type;
 	};
 
-	Collider.prototype.setStatic = function() {
-		this.static = true;
+	Collider.prototype.setStatic = function(isStatic) {
+		this.static = isStatic;
 	};
 	
 	return Collider;

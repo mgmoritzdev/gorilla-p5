@@ -3,12 +3,8 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 	let cm;
 	
 	beforeEach(function() {
-		
-		// CollisionManager is a simple object, it is necessary to clean up it's state in every test case
 		cm = CollisionManager;
-		cm.removeAllColliders();
-		
-	});
+	});	
 	
 	describe('Should allow to', function() {
 
@@ -22,9 +18,12 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 
 	describe('Should allow collider manipulation such as', function() {
 
+		beforeEach(function() {
+			cm.removeAllColliders();
+		});
+		
 		it('add a collider', function() {
 
-			cm = CollisionManager;
 			expect(cm.getColliders().length).toEqual(0);
 
 			// invalid collider
@@ -38,6 +37,36 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 			
 			expect(cm.getColliders().length).toEqual(1);
 			
+		});
+
+		it('add a collider and keep dynamic colliders in the beginning of the array', function() {
+
+			const staticColl1 = new Collider();
+			const staticColl2 = new Collider();
+			const staticColl3 = new Collider();
+			const dynamicColl1 = new Collider();
+			const dynamicColl2 = new Collider();
+			const dynamicColl3 = new Collider();
+
+			staticColl1.setStatic(true);
+			staticColl2.setStatic(true);
+			staticColl3.setStatic(true);			
+			
+			cm.addCollider(staticColl1);
+			cm.addCollider(dynamicColl2);
+			cm.addCollider(staticColl2);
+			cm.addCollider(staticColl3);
+			cm.addCollider(dynamicColl1);
+			cm.addCollider(dynamicColl3);
+			
+			expect(cm.getColliders()[0].static).toBe(false);
+			expect(cm.getColliders()[1].static).toBe(false);
+			expect(cm.getColliders()[2].static).toBe(false);
+
+			expect(cm.getColliders()[3].static).toBe(true);
+			expect(cm.getColliders()[4].static).toBe(true);
+			expect(cm.getColliders()[5].static).toBe(true);
+						
 		});
 
 		it('remove a collider', function() {
@@ -63,6 +92,12 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 	});
 
 	describe('Should be able to check collisions between cicles', function() {
+
+		beforeEach(function() {
+			cm.removeAllColliders();
+		});
+
+
 		it('and return a collision object case it collides', function() {
 
 			const circleColl1 = new Collider();
@@ -81,6 +116,11 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 	});
 
 	describe('Should be able to check collisions between cicles', function() {
+
+		beforeEach(function() {
+			cm.removeAllColliders();
+		});
+
 		it('and return null if it not collides', function() {
 
 			const circleColl1 = new Collider();
@@ -99,6 +139,11 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 	});
 
 	describe('Should calculate collisions on update for all colliders', function() {
+
+		beforeEach(function() {
+			cm.removeAllColliders();
+		});
+
 		it('and apply a callback in the case it collides', function() {
 
 			const circleColl1 = new Collider();

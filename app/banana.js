@@ -4,9 +4,14 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
     this.physics = new Physics();
 	  this.physics.addRigidBody(mass, gravity);
 		this.size = size;
-		
+		this.destroy = false;
+			
 		const collider = new Collider();
 		collider.setDiameter(size);
+		collider.onCollision = function(collision) {
+			this.destroy = true;
+			console.log('banana collided');
+		};
 		this.physics.addCollider(collider);
   };
 

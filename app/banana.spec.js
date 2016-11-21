@@ -6,8 +6,9 @@ define(['banana', 'vector2'],function (Banana, Vector2) {
 
 		const mass = 10;
 		const gravity = 9.81 / 60;
+		const diameter = 15;
 		
-		banana = new Banana(mass, gravity);
+		banana = new Banana(mass, gravity, diameter);
 	});
 	
 	describe('Object creation', function () {

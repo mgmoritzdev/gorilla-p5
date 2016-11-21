@@ -1,4 +1,4 @@
-define(['vector2'], function (Vector2) {
+define(['vector2', 'collisionManager'], function (Vector2, cm) {
   var Physics = function() {
 	  this.position = new Vector2(0, 0);
     this.velocity = new Vector2(0, 0);
@@ -6,11 +6,13 @@ define(['vector2'], function (Vector2) {
   };
 
   Physics.prototype.setPosition = function (position) {
-    this.position = position;
+    this.position.x = position.x;
+	  this.position.y = position.y;
   };
 
   Physics.prototype.setVelocity = function (velocity) {
-    this.velocity = velocity;
+	  this.velocity.x = velocity.x;
+	  this.velocity.y = velocity.y;
   };
 
   Physics.prototype.setRotation = function (rotation) {
@@ -76,6 +78,9 @@ define(['vector2'], function (Vector2) {
   };  
 
   Physics.prototype.addCollider = function(collider) {
+
+	  cm.addCollider(collider);
+	  
     if (typeof(this.colliders) === 'undefined') {
       this.colliders = [];
     }
@@ -85,6 +90,8 @@ define(['vector2'], function (Vector2) {
 
   Physics.prototype.removeCollider = function(collider) {
 
+	  cm.removeCollider(collider);
+	  
 	  if (typeof(this.colliders) === 'undefined') {
       return;
     }

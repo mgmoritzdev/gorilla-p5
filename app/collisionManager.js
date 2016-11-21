@@ -5,10 +5,11 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 	function addCollider(collider) {
 
 		if (!(collider instanceof Collider)) {
-			throw new Error("The object is not an instance of Collider");
+			throw new Error("The object is not an instance of Collider");			
 		}
 		
 		colliders.push(collider);
+		sortColliders();
 	}
 
 	function removeCollider(collider) {
@@ -21,16 +22,24 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 		
 	}
 
+	function sortColliders() {
+		colliders = colliders.sort((x, y) => x.static ? 1 : -1 );
+	}
+
+	function getDynamicColliders() {
+		return colliders.filter((x) => !x.static);
+	}
+
 	function getColliders() {
 		return colliders;
 	}
 
 	function removeAllColliders() {
-		colliders = [];
+		colliders.length = 0;
 	}
 
-	function update() {	
-		for (let i = 0; i < colliders.length - 1; i++) {
+	function update() {
+		for (let i = 0; i < getDynamicColliders().length - 1; i++) {
 			for (let j = i + 1; j < colliders.length; j++) {
 				let collision = checkCollision(colliders[i], colliders[j]);
 				if (typeof(colliders[i].onCollision) !== 'undefined' && collision !== null) {
