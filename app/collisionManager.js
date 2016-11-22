@@ -39,12 +39,17 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 	}
 
 	function update() {
-		for (let i = 0; i < getDynamicColliders().length - 1; i++) {
+
+		const dynColl = getDynamicColliders();
+		
+		for (let i = 0; i < dynColl.length; i++) {
 			for (let j = i + 1; j < colliders.length; j++) {
-				let collision = checkCollision(colliders[i], colliders[j]);
-				if (typeof(colliders[i].onCollision) !== 'undefined' && collision !== null) {
-					colliders[i].onCollision(collision);
-					colliders[j].onCollision(invertNormal(collision));
+				const coll1 = colliders[i];
+				const coll2 = colliders[j];
+				let collision = checkCollision(coll1, coll2);
+				if (typeof(coll1.onCollision) !== 'undefined' && collision !== null) {
+					coll1.onCollision(collision);
+					coll2.onCollision(invertNormal(collision));
 				}
 			}	
 		}

@@ -21,6 +21,10 @@ define(['vector2'], function(Vector2) {
 	Collider.prototype.setStatic = function(isStatic) {
 		this.static = isStatic;
 	};
+
+	Collider.prototype.setName = function(name) {
+		this.name = name;
+	};
 	
 	return Collider;
 

@@ -317,14 +317,15 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 
     if (hitGround()) {
       isBananaFlying = false;
+	    banana.onCollision();
       getCurrentGorilla().storeResultAI();
       callNextPlayer();
       return;
     }
 
     if (isBananaFlying) {
-      bananaPosition = { x: bananaPosition.x + bananaVelocity.x, y: bananaPosition.y + bananaVelocity.y};
-      bananaVelocity = { x: bananaVelocity.x + wind, y: bananaVelocity.y + gravity * gravityScaleFactor };
+      // bananaPosition = { x: bananaPosition.x + bananaVelocity.x, y: bananaPosition.y + bananaVelocity.y };
+      // bananaVelocity = { x: bananaVelocity.x + wind, y: bananaVelocity.y + gravity * gravityScaleFactor };
 
 	    if (typeof(banana) !== 'undefined') {
 		    banana.update();
@@ -349,11 +350,11 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
     if (isBananaFlying) {
       var otherGorillas = gorillas.filter(x => x !== getCurrentGorilla());
       var hitGorilla = otherGorillas
-        .filter(x => x.position.dist(bananaPosition) < (bananaDiameter / 2 + gorillaDiameter / 2));
+        .filter(x => x.destroy);
 
       if (hitGorilla.length > 0) {
         return hitGorilla[0];
-      }  
+      }
     }
   }
 
@@ -367,14 +368,19 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
     if (typeof(currentGorilla.ai.throwResult) === 'undefined') {
       currentGorilla.ai.throwResult = [];
     }
-    currentGorilla.ai.throwResult.push(currentGorilla.ai.target.position.dist(bananaPosition));
+    currentGorilla.ai.throwResult.push(currentGorilla.ai.target.position.dist(banana.physics.position));
   }
 
   function hitGround() {
     if (isBananaFlying) {
-      return bananaPosition.y > processing.height ||
-        bananaPosition.x > processing.width * 1.5 ||
-        bananaPosition.x < -0.5 * processing.width;
+      // return bananaPosition.y > processing.height ||
+      //   bananaPosition.x > processing.width * 1.5 ||
+      //   bananaPosition.x < -0.5 * processing.width;
+
+	    return banana.physics.position.y > processing.height ||
+		    banana.physics.position.x > processing.width * 1.5 ||
+		    banana.physics.position.x < -0.5 * processing.width;
+		    
     }
 
     return false;

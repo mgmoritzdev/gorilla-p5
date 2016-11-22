@@ -71,7 +71,6 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 
 		it('remove a collider', function() {
 
-			// 
 			expect(cm.getColliders().length).toEqual(0);
 
 			// add two colliders to manager

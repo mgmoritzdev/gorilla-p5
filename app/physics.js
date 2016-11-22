@@ -19,6 +19,10 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
     this.rotation = rotation;
   };
 
+	Physics.prototype.setName = function(name) {
+		this.name = name;
+	};
+	
   Physics.prototype.setAcceleration = function (acceleration) {
     this.fixedAcceleration = acceleration.copy();
 	  this.acceleration = acceleration;

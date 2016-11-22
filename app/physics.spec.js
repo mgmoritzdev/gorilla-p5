@@ -1,11 +1,15 @@
 define(['physics', 'vector2', 'collider'],function (Physics, Vector2, Collider){
 
 	
-	let collider;
+	let collider1, collider2;
 
 	// mock collider
 	beforeEach(function() {
-		collider = new Collider();
+		collider1 = new Collider();
+		collider2 = new Collider();
+
+		collider1.setType('type1');
+		collider2.setType('type2');
 	});
 
 	describe('Should allow to create: ', function () {
@@ -70,11 +74,11 @@ define(['physics', 'vector2', 'collider'],function (Physics, Vector2, Collider){
     it('collider', function () {
 
 	    const physics = new Physics();
-      physics.addCollider(collider);
+      physics.addCollider(collider1);
 
       expect(physics.colliders).toBeDefined();
       expect(physics.colliders.length).toBeGreaterThan(0);
-      expect(physics.colliders[0]).toBe(collider);
+      expect(physics.colliders[0]).toBe(collider1);
       
     });
 
@@ -119,14 +123,16 @@ define(['physics', 'vector2', 'collider'],function (Physics, Vector2, Collider){
     it('collider', function () {
       
       const physics = new Physics();
-      physics.addCollider(collider);
+      physics.addCollider(collider1);
+	    physics.addCollider(collider2);
 
-	    expect(physics.colliders.length).toBeGreaterThan(0);
+	    expect(physics.colliders.length).toEqual(2);
 	    
-      physics.removeCollider(collider);
+      physics.removeCollider(collider1);
 
-      expect(physics.colliders.length).toEqual(0);
-      
+	    expect(physics.colliders.length).toEqual(1);
+	    expect(physics.colliders[0].type).toEqual('type2');
+	    
     });
 
     it('force', function () {
