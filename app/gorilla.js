@@ -1,5 +1,8 @@
 define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2, geometry, Physics, Collider) {
 
+	const cannonLength = 30;
+	const gorillaDiameter = 40;
+	
   var Gorilla = function(name, position, color, strength, angle, npc, mass, size) {
 
 	  let gorilla = this;
@@ -25,8 +28,42 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 	  };
 
 	  gorilla.physics.addCollider(collider);
+
   };
 
+	Gorilla.prototype.render = function(renderer) {
+		var cannonEnd = this.getGorillaCannonTip();
+
+		renderer.fill(this.color);
+		renderer.stroke(this.color);
+		renderer.strokeWeight(10);
+		renderer.ellipse(
+			this.position.x,
+			this.position.y,
+			gorillaDiameter,
+			gorillaDiameter
+		);
+		
+		renderer.line(
+			this.position.x,
+			this.position.y,
+			cannonEnd.x,
+			cannonEnd.y);
+		renderer.fill(255);
+		renderer.strokeWeight(1);
+		renderer.stroke(1);
+	};
+
+	Gorilla.prototype.getGorillaCannonTip = function() {
+		const { color, strength, angle, position } = this;
+
+		return new Vector2(
+			position.x + (cannonLength + strength) * Math.cos(geometry.radians(angle)),
+			position.y + (cannonLength + strength) * -Math.sin(geometry.radians(angle))
+		);
+	};
+
+	
   /* AI Functions
   * new gorilla attributes:
   * - target: Gorilla
@@ -38,8 +75,9 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
   *     .strength
   */
 
-  Gorilla.prototype.selectTargetAI = function(gorillas, currentPlayerIndex) {
-    var targetIndex = Math.floor(Math.random() * (gorillas.length - 1));
+  Gorilla.prototype.selectTargetAI = function(gorillas) {
+	  var targetIndex = Math.floor(Math.random() * (gorillas.length - 1));
+	  var currentPlayerIndex = gorillas.indexOf(this);
 
     // discard itself
     if (targetIndex >= currentPlayerIndex) {
@@ -171,6 +209,16 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
     var strengthAxis = this.ai.strength - this.strength;
     return getAxis(strengthAxis, sensitivity);
   };
+
+	Gorilla.prototype.updateTargetAI = function(gorillas, strengthOffset, angleOffset) {
+		if (gorillas.indexOf(this.ai.target) === -1) {
+			this.selectTargetAI(gorillas);
+			this.generateFirstGuessAI();
+		} else if (!this.aimDefined()) {
+			this.setAimStrategyAI(strengthOffset, angleOffset);
+			this.updateAimAI();
+		}
+	};
 
   Gorilla.prototype.addStrength = function (amount) {
     this.strength = wrapStrength(this.strength + amount);
