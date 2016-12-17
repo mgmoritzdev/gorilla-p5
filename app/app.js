@@ -6,8 +6,6 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	
   var gorillas;
   var currentPlayerIndex;
-  var bananaPosition;
-  var bananaVelocity;
   var wind;
   var bananaDiameter = 15;
   var gorillaDiameter = 40;
@@ -255,29 +253,30 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
     return gorillas[currentPlayerIndex];
   }
 
-  function updateBanana() {
+	function updateBanana() {
 
-	  updateThrowResult();
-    var enemyDestroyed = getEnemyDestroyed();
-    var enemyDestroyedIndex = gorillas.indexOf(enemyDestroyed);
+		updateThrowResult();
+		var enemyDestroyed = getEnemyDestroyed();
+		var enemyDestroyedIndex = gorillas.indexOf(enemyDestroyed);
 
-    if (typeof(enemyDestroyed) !== 'undefined') {
+		if (typeof(enemyDestroyed) !== 'undefined') {
 
-      explosionSound.setVolume(0.3);
-      explosionSound.play();
+			explosionSound.setVolume(0.3);
+			explosionSound.play();
 
-      if (enemyDestroyedIndex < currentPlayerIndex) {
-        currentPlayerIndex--;
-      }
-      gorillas = gorillas.filter(x => x !== enemyDestroyed);
-      isBananaFlying = false;
+			if (enemyDestroyedIndex < currentPlayerIndex) {
+				currentPlayerIndex--;
+			}
+			gorillas = gorillas.filter(x => x !== enemyDestroyed);
+			isBananaFlying = false;
 
-      callNextPlayer();
+			callNextPlayer();
 
-      if (checkEndGameState()) {
-        gameEnded = true;
-      }
-    }
+			if (checkEndGameState()) {
+				gameEnded = true;
+			}
+		}
+	
 
     if (hitGround()) {
       isBananaFlying = false;
@@ -287,15 +286,10 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
       return;
     }
 
-    if (isBananaFlying) {
-      // bananaPosition = { x: bananaPosition.x + bananaVelocity.x, y: bananaPosition.y + bananaVelocity.y };
-      // bananaVelocity = { x: bananaVelocity.x + wind, y: bananaVelocity.y + gravity * gravityScaleFactor };
-
-	    if (typeof(banana) !== 'undefined') {
-		    banana.update();
-		    cm.update();
-	    }
-    }
+	  if (typeof(banana) !== 'undefined') {
+		  banana.update();
+		  cm.update();
+	  }
   }
 
   function checkEndGameState() {
@@ -323,7 +317,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
   function updateThrowResult() {
     var currentGorilla = getCurrentGorilla();
 
-    if (!currentGorilla.npc || !isBananaFlying) {
+    if (!currentGorilla.npc) {
       return;
     }
 
@@ -334,18 +328,9 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
   }
 
   function hitGround() {
-    if (isBananaFlying) {
-      // return bananaPosition.y > processing.height ||
-      //   bananaPosition.x > processing.width * 1.5 ||
-      //   bananaPosition.x < -0.5 * processing.width;
-
-	    return banana.physics.position.y > processing.height ||
-		    banana.physics.position.x > processing.width * 1.5 ||
-		    banana.physics.position.x < -0.5 * processing.width;
-		    
-    }
-
-    return false;
+	  return banana.physics.position.y > processing.height ||
+		  banana.physics.position.x > processing.width * 1.5 ||
+		  banana.physics.position.x < -0.5 * processing.width;		    
   }
 
   function handleKeyBananaThrow() {
@@ -357,11 +342,6 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
   function throwBanana() {
     isBananaFlying = true;
     var gorilla = getCurrentGorilla();
-    bananaPosition = gorilla.getGorillaCannonTip();
-    bananaVelocity = new Vector2(
-      gorilla.strength * processing.cos(processing.radians(gorilla.angle)),
-      gorilla.strength * -processing.sin(processing.radians(gorilla.angle)));
-
 	  var bananaMass = 1;
 	  banana = new Banana(bananaMass, gravity * gravityScaleFactor, bananaDiameter);
 	  
