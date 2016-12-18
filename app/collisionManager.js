@@ -47,9 +47,9 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 				const coll1 = colliders[i];
 				const coll2 = colliders[j];
 				let collision = checkCollision(coll1, coll2);
-				if (typeof(coll1.onCollision) !== 'undefined' && collision !== null) {
-					coll1.onCollision(collision);
-					coll2.onCollision(invertNormal(collision));
+				if (collision !== null) {
+					coll1.notify(collision);
+					coll2.notify(invertNormal(collision));
 				}
 			}	
 		}

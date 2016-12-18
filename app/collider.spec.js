@@ -29,5 +29,45 @@ define(['collider', 'vector2'], function(Collider, Vector2) {
 			expect(collider.type).toEqual('circular');
 		});
 	});
+
+	describe('Should allow subscribers', function() {
+		
+		it('to subscribe', function() {
+
+			// pass an emtpy callback to the collider
+			collider.subscribe(function() {});			
+			expect(collider.subscribers.length).toBe(1);			
+			collider.subscribe(function() {});
+			expect(collider.subscribers.length).toBe(2);
+		});
+
+		it('to be notified of an event', function() {
+
+			// a dummy object to be changed in the subscribed callback
+			var obj = { property1: 10, property2: 15 };
+			
+			// an object to hold the callbacks
+			var callbackHolder = {};
+			callbackHolder.callback1 = function() {
+				obj.property1 = 20;
+			};
+			callbackHolder.callback2 = function() {
+				obj.property2 = 25;
+			};
+			
+			spyOn(callbackHolder, 'callback1').and.callThrough();
+			spyOn(callbackHolder, 'callback2').and.callThrough();
+
+			collider.subscribe(callbackHolder.callback1);
+			collider.subscribe(callbackHolder.callback2);
+			collider.notify();
+			
+			expect(collider.subscribers.length).toBe(2);
+			expect(callbackHolder.callback1).toHaveBeenCalled();
+			expect(callbackHolder.callback2).toHaveBeenCalled();
+			expect(obj.property1).toBe(20);
+			expect(obj.property2).toBe(25);
+		});
+	});
 	
 });

@@ -2,6 +2,7 @@ define(['vector2'], function(Vector2) {
 
 	var Collider = function() {
 		this.static = false;
+		this.subscribers = [];
 	};
 
 	Collider.prototype.setPosition = function(position) {
@@ -24,6 +25,14 @@ define(['vector2'], function(Vector2) {
 
 	Collider.prototype.setName = function(name) {
 		this.name = name;
+	};
+
+	Collider.prototype.subscribe = function(callback) {
+		this.subscribers.push(callback);
+	};
+
+	Collider.prototype.notify = function(collision) {
+		this.subscribers.forEach(cb => cb.call(this, collision));
 	};
 	
 	return Collider;

@@ -150,17 +150,17 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 
 			let collision12;
 			let collision21;
-			
-			circleColl1.onCollision = function(collision) {
+
+			circleColl1.callback = function(collision) {
 				collision12 = collision;
 			};
 
-			circleColl2.onCollision = function(collision) {
+			circleColl2.callback = function(collision) {
 				collision21 = collision;
 			};
 			
-			spyOn(circleColl1, 'onCollision').and.callThrough();
-			spyOn(circleColl2, 'onCollision').and.callThrough();
+			spyOn(circleColl1, 'callback').and.callThrough();
+			spyOn(circleColl2, 'callback').and.callThrough();
 			
 			circleColl1.setPosition(new Vector2(10, 10));
 			circleColl2.setPosition(new Vector2(10, 15));
@@ -171,10 +171,13 @@ define(['collisionManager', 'circularCollider', 'vector2'], function(CollisionMa
 			cm.addCollider(circleColl1);
 			cm.addCollider(circleColl2);
 
+			circleColl1.subscribe(circleColl1.callback);
+			circleColl2.subscribe(circleColl2.callback);
+			
 			cm.update();
 
-			expect(circleColl1.onCollision).toHaveBeenCalled();
-			expect(circleColl2.onCollision).toHaveBeenCalled();
+			expect(circleColl1.callback).toHaveBeenCalled();
+			expect(circleColl2.callback).toHaveBeenCalled();
 			expect(collision12.normal.magnitude()).toEqual(5);
 			expect(collision21.normal.magnitude()).toEqual(5);
 			expect(collision12.normal.x).toBe(-collision21.normal.x);

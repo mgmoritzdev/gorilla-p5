@@ -22,13 +22,11 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 	  collider.setName(gorilla.name);
 	  collider.setDiameter(size);
 	  collider.setStatic(true);
-	  collider.onCollision = function(collision) {
-		  gorilla.destroy = true;
-		  gorilla.physics.removeCollider(collider);
-	  };
 
 	  gorilla.physics.addCollider(collider);
-
+	  gorilla.physics.addCallbackToCollider(function(collision) {
+		  gorilla.physics.removeCollider(collider);
+	  });
   };
 
 	Gorilla.prototype.render = function(renderer) {
@@ -52,6 +50,10 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 		renderer.fill(255);
 		renderer.strokeWeight(1);
 		renderer.stroke(1);
+	};
+
+	Gorilla.prototype.onCollision = function(callback) {
+		this.physics.addCallbackToCollider(callback);
 	};
 
 	Gorilla.prototype.getGorillaCannonTip = function() {

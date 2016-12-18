@@ -1,6 +1,6 @@
 {
     "quotmark" : false,
     "undef" : true,
-    "predef" : [ "define", "require", "module", "describe", "it", "expect" ],
+    "predef" : [ "define", "require", "module", "describe", "it", "expect", "beforeEach" ],
     "esversion": 6
 }

@@ -81,16 +81,16 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
 	  this.removeForce(this.gravityForce);
   };  
 
-  Physics.prototype.addCollider = function(collider) {
+	Physics.prototype.addCollider = function(collider) {
 
-	  cm.addCollider(collider);
-	  
-    if (typeof(this.colliders) === 'undefined') {
-      this.colliders = [];
-    }
-	  collider.setPosition(this.position);
-    this.colliders.push(collider);
-  };
+		cm.addCollider(collider);
+		
+		if (typeof(this.colliders) === 'undefined') {
+			this.colliders = [];
+		}
+		collider.setPosition(this.position);
+		this.colliders.push(collider);
+	};
 
   Physics.prototype.removeCollider = function(collider) {
 
@@ -107,6 +107,11 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
     }
     
   };
+
+	Physics.prototype.addCallbackToCollider = function(callback) {	
+
+		this.colliders.forEach(coll => coll.subscribe(callback));		
+	};
 
   Physics.prototype.update = function() {
 	  

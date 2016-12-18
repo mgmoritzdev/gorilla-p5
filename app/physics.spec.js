@@ -257,4 +257,55 @@ define(['physics', 'vector2', 'collider'],function (Physics, Vector2, Collider){
 
   });
 
+	describe('Should allow to relate colliders to physics being able to', function() {
+		it('add a collider', function() {
+			var physics = new Physics();
+			var collider = new Collider();
+
+			physics.addCollider(collider);
+
+			expect(physics.colliders.length).toBe(1);
+			physics.addCollider(collider);
+			expect(physics.colliders.length).toBe(2);
+		});
+
+		it('remove a collider', function() {
+			var physics = new Physics();
+			var collider1 = new Collider();
+			var collider2 = new Collider();
+
+			// add two different colliders
+			physics.addCollider(collider1);
+			physics.addCollider(collider2);
+
+			expect(physics.colliders.length).toBe(2);
+
+			physics.removeCollider(collider1);
+			
+			expect(physics.colliders.length).toBe(1);
+
+			expect(physics.colliders.indexOf(collider1)).toBe(-1);
+			expect(physics.colliders.indexOf(collider2)).toBe(0);
+						
+		});
+
+		it('pass a collision callback to the collider', function() {
+			var physics = new Physics();
+			var collider = new Collider();
+
+			physics.addCollider(collider);
+
+			var callback = function() {
+				var word = "Supercalifragilisticexpialidocious";
+			};
+			physics.addCallbackToCollider(callback);
+
+			expect(physics
+			       .colliders[0]
+			       .subscribers[0]
+			       .toString())
+				.toContain("Supercalifragilisticexpialidocious");
+		});
+	});
+
 });

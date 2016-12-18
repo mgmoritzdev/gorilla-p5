@@ -5,27 +5,25 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
 		let banana = this;
 		
 		banana.name = 'banana';
+		banana.isActive = false;
 		
 		banana.physics = new Physics();
 		banana.physics.setName(banana.name);
 		banana.physics.addRigidBody(mass, gravity);
-		
+
 		banana.size = size;
-		banana.destroy = false;
-		
 		
 		const collider = new Collider();
 
 		collider.setDiameter(size);
 		collider.setName(banana.name);
 		
-		collider.onCollision = function(collision) {
-			this.destroy = true;
-			banana.physics.removeCollider(collider);
-		};
-
 		this.collider = collider;
 		this.physics.addCollider(collider);
+
+		this.physics.addCallbackToCollider(function(collision) {
+			banana.isActive = false;
+		});
   };
 
 	Banana.prototype.update = function() {
@@ -41,8 +39,8 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
 			this.size);
 	};
 
-	Banana.prototype.onCollision = function() {
-		this.collider.onCollision();
+	Banana.prototype.onCollision = function(callback) {
+		this.physics.addCallbackToCollider(callback);
 	};
 	
   return Banana;
