@@ -19,6 +19,8 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 	  gorilla.physics.addRigidBody(mass, size);
 	  
 	  const collider = new Collider();
+	  gorilla.collider = collider;
+	  
 	  collider.setName(gorilla.name);
 	  collider.setDiameter(size);
 	  collider.setStatic(true);
@@ -29,27 +31,34 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 	  });
   };
 
-	Gorilla.prototype.render = function(renderer) {
-		var cannonEnd = this.getGorillaCannonTip();
+	Gorilla.prototype.setRenderer = function(renderer) {
+		this.renderer = renderer;
+		this.collider.setRenderer(renderer);
+	};
 
-		renderer.fill(this.color);
-		renderer.stroke(this.color);
-		renderer.strokeWeight(10);
-		renderer.ellipse(
+	Gorilla.prototype.render = function() {
+		var cannonEnd = this.getGorillaCannonTip();
+	
+		this.renderer.fill(this.color);
+		this.renderer.noStroke();
+		this.renderer.strokeWeight(0);
+		this.renderer.ellipse(
 			this.position.x,
 			this.position.y,
 			gorillaDiameter,
 			gorillaDiameter
 		);
-		
-		renderer.line(
+
+		this.renderer.stroke(this.color);
+		this.renderer.strokeWeight(10);
+		this.renderer.line(
 			this.position.x,
 			this.position.y,
 			cannonEnd.x,
 			cannonEnd.y);
-		renderer.fill(255);
-		renderer.strokeWeight(1);
-		renderer.stroke(1);
+		this.renderer.fill(255);
+		this.renderer.strokeWeight(1);
+		this.renderer.stroke(1);
 	};
 
 	Gorilla.prototype.onCollision = function(callback) {

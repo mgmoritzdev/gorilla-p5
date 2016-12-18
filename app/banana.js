@@ -30,9 +30,14 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
 		this.physics.update();
 	};
 
-	Banana.prototype.render = function(renderer) {
-		renderer.fill(0);
-		renderer.ellipse(
+	Banana.prototype.setRenderer = function(renderer) {
+		this.renderer = renderer;
+		this.collider.setRenderer(renderer);
+	};
+	
+	Banana.prototype.render = function() {
+		this.renderer.fill(0);
+		this.renderer.ellipse(
 			this.physics.position.x,
 			this.physics.position.y,
 			this.size,

@@ -4,6 +4,17 @@ define(['collider'], function(Collider) {
 		this.diameter = diameter;
 	};
 
+	Collider.prototype.setRenderer = function(renderer) {
+		this.renderer = renderer;
+	};
+
+	Collider.prototype.render = function() {
+		this.renderer.strokeWeight(2);
+		this.renderer.stroke(0,0,0);
+		this.renderer.fill(0,0,0,0);
+		this.renderer.ellipse(this.position.x, this.position.y, this.diameter, this.diameter);
+	};
+
 	return Collider;
 	
 });

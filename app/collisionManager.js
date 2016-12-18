@@ -79,13 +79,18 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 		return new Collision(coll1, coll2, penetration, normal);
 	}
 
+	function renderAllColliders() {
+		colliders.forEach(c => c.render());
+	}
+
 	return {
 		addCollider: addCollider,
 		removeCollider: removeCollider,
 		getColliders: getColliders,
 		removeAllColliders: removeAllColliders,
 		checkCollision: checkCollision,
-		update: update
+		update: update,
+		renderAllColliders: renderAllColliders
 	};
 	
 });

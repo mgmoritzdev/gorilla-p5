@@ -7,11 +7,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	var currentGorilla;
 	
 	var wind;
-	var bananaDiameter = 15;
-	var bananaMass = 1;
 	
-	var gorillaDiameter = 40;
-
 	var isBananaFlying = false;
 	var gameEnded = false;
 	var strengthAxis = 0;
@@ -61,18 +57,19 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		
 		resetGame();
 		processing.frameRate(60);
-
-		banana = new Banana(bananaMass, gravity * gravityScaleFactor, bananaDiameter);
 	}
 
 	function draw() {
 		processing.background(255);
 
 		if (!gameEnded) {
-			drawGorillas();
+			gorillas.forEach(g => g.render());
+
+			// show all colliders registered in collisionManager for debugging purpuses.
+			// cm.renderAllColliders();
 			if (banana.isActive) {
 				updateBanana();
-				drawBanana();
+				banana.render();
 			} else {
 				updateTarget();
 				displayTouchControl();
@@ -190,31 +187,30 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		processing.fill(255);
 	}
 	
-	function drawBanana() {
-		if (typeof(banana) !== 'undefined') {
-			banana.render(processing);
-		}
-	}
-
-	function drawGorillas() {
-		gorillas.forEach(gorilla => {
-			gorilla.render(processing);
-		});
-	}
-	
 	function resetGame() {
 		gorillas = [];
+		cm.removeAllColliders();
 		
-		initalizeGorila('blue', 45, false);
-		initalizeGorila('red', 135, true);
-		initalizeGorila('green', 135, true);
-		initalizeGorila('magenta', 135, true);
-		initalizeGorila('yellow', 135, true);
+		initializeBanana();
+		initializeGorila('blue', 45, false);
+		initializeGorila('red', 135, true);
+		initializeGorila('green', 135, true);
+		initializeGorila('magenta', 135, true);
+		initializeGorila('yellow', 135, true);
+
 		currentGorilla = gorillas[0];
 		gameEnded = false;
 		strengthAxis = 0;
 		angleAxis = 0;
 		wind = processing.random(-0.1,0.1);
+	}
+
+	function initializeBanana() {
+		var diameter  = 10;
+		var mass = 1;
+		
+		banana = new Banana(mass, gravity * gravityScaleFactor, diameter);
+		banana.setRenderer(processing);
 	}
 
 	function updateTarget() {
@@ -235,23 +231,28 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		gorilla.addAngle(angleAxis * angleOffset);
 	}
 
-	function initalizeGorila(gorillaColor, angle, npc) {
+	function initializeGorila(gorillaColor, angle, npc) {
+		var strengthOnStart = 10;
+		var diameter = 40;
+		var mass = 10;
+		
 		var xPos = (gorillas.length * 0.2 + 0.1) * processing.width;
-		var newGorilla = new Gorilla(
+		var gorilla = new Gorilla(
 			gorillaColor,
 			new Vector2(xPos, getRandomYPosition()),
 			processing.color(gorillaColor),
-			10,
+			strengthOnStart,
 			angle,
 			npc,
-			10,
-			40);
+			mass,
+			diameter);
 		var collisionCallback = function() {
-			cm.removeCollider(newGorilla.collider);
-			destroyGorilla(newGorilla);
+			cm.removeCollider(gorilla.collider);
+			destroyGorilla(gorilla);
 		};
-		newGorilla.physics.addCallbackToCollider(collisionCallback);		
-		gorillas.push(newGorilla);
+		gorilla.physics.addCallbackToCollider(collisionCallback);
+		gorilla.setRenderer(processing);
+		gorillas.push(gorilla);
 	}
 
 	function destroyGorilla(gorilla) {
