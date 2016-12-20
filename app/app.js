@@ -65,8 +65,6 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		if (!gameEnded) {
 			gorillas.forEach(g => g.render());
 
-			// show all colliders registered in collisionManager for debugging purpuses.
-			// cm.renderAllColliders();
 			if (banana.isActive) {
 				updateBanana();
 				banana.render();
@@ -75,6 +73,9 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 				displayTouchControl();
 				drawTarget();
 			}
+
+			// show all colliders registered in collisionManager for debugging purpuses (after all updates).
+			// cm.renderAllColliders();
 		} else {
 			displayGameResult();
 		}
@@ -196,7 +197,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		initializeGorila('red', 135, true);
 		initializeGorila('green', 135, true);
 		initializeGorila('magenta', 135, true);
-		initializeGorila('yellow', 135, true);
+		initializeGorila('orange', 135, true);
 
 		currentGorilla = gorillas[0];
 		gameEnded = false;
@@ -245,7 +246,8 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 			angle,
 			npc,
 			mass,
-			diameter);
+			diameter,
+			gravity);
 		var collisionCallback = function() {
 			cm.removeCollider(gorilla.collider);
 			destroyGorilla(gorilla);

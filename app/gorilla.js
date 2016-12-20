@@ -1,9 +1,9 @@
-define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2, geometry, Physics, Collider) {
+define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], function (Vector2, geometry, Physics, Collider, baskara) {
 
 	const cannonLength = 30;
 	const gorillaDiameter = 40;
 	
-  var Gorilla = function(name, position, color, strength, angle, npc, mass, size) {
+	var Gorilla = function(name, position, color, strength, angle, npc, mass, size, gravity) {
 
 	  let gorilla = this;
 
@@ -16,7 +16,7 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 	  gorilla.ai = {};
 	  gorilla.physics = new Physics();
 	  gorilla.physics.setPosition(gorilla.position);
-	  gorilla.physics.addRigidBody(mass, size);
+	  gorilla.physics.addRigidBody(mass, gravity);
 	  
 	  const collider = new Collider();
 	  gorilla.collider = collider;
@@ -49,7 +49,12 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
 			gorillaDiameter
 		);
 
-		this.renderer.stroke(this.color);
+		if (this.ai.target) {
+			this.renderer.stroke(this.ai.target.color);
+		} else {
+			this.renderer.stroke(this.color);
+		}
+
 		this.renderer.strokeWeight(10);
 		this.renderer.line(
 			this.position.x,
@@ -98,31 +103,42 @@ define(['vector2', 'geometry', 'physics', 'circularCollider'], function (Vector2
     this.ai.target = gorillas[targetIndex];
   };
 
-  Gorilla.prototype.generateFirstGuessAI = function() {
+	Gorilla.prototype.generateFirstGuessAI = function() {
     var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
-    var distance = this.ai.target.position.dist(this.position);
-    this.ai.strength = Math.pow(Math.abs(positionDiff.x), 0.5) / 2 +
-      (positionDiff.y < 0 ? Math.pow(Math.abs(positionDiff.y), 0.5) / 4 : 0);
+		this.ai.angle = baskara.findAngleToShoot(this.position, this.ai.target.position);
+		this.ai.strength = getFirstGuessStrength(positionDiff);
+		//this.ai.strength =  baskara.findStrengthToShoot(this.position, this.ai.target.position, this.physics.gravity, this.ai.angle);
+	};
 
-    var angleBetweenThisAndTarget = Math.abs(geometry.degrees(Math.atan(Math.abs(positionDiff.y / positionDiff.x))));
+	function getFirstGuessStrength(positionDiff) {
+		var distance = this.ai.target.position.dist(this.position);
+		return Math.pow(Math.abs(positionDiff.x), 0.5) / 2 +
+		    (positionDiff.y < 0 ? Math.pow(Math.abs(positionDiff.y), 0.5) / 4 : 0);
+	}
 
-    // starting from the angle between the line that connects this and target, got half way in the straigh angle direction
-    var halfWayTowardsStraigthAngle = (90 - angleBetweenThisAndTarget) / 2;
+	function getFirstGuessAngle(positionDiff) {
+		var angleBetweenThisAndTarget = Math.abs(geometry.degrees(Math.atan(Math.abs(positionDiff.y / positionDiff.x))));
 
-    if (positionDiff.x < 0) {
-      if (positionDiff.y < 0) {
-        this.ai.angle = 90 + halfWayTowardsStraigthAngle;
-      } else {
-        this.ai.angle = 90 + (90 + angleBetweenThisAndTarget) / 2;
-      }
-    } else {
-      if (positionDiff.y < 0) {
-        this.ai.angle = angleBetweenThisAndTarget + halfWayTowardsStraigthAngle;
-      } else {
-        this.ai.angle = 90 - (90 + angleBetweenThisAndTarget) / 2;
-      }
-    }
-  };
+		// starting from the angle between the line that connects this and target, got half way in the straigh angle direction
+		var halfWayTowardsStraigthAngle = (90 - angleBetweenThisAndTarget) / 2;
+		var angle = 0;
+
+		if (positionDiff.x < 0) {
+			if (positionDiff.y < 0) {
+				angle = 90 + halfWayTowardsStraigthAngle;
+			} else {
+				angle = 90 + (90 + angleBetweenThisAndTarget) / 2;
+			}
+		} else {
+			if (positionDiff.y < 0) {
+				angle = angleBetweenThisAndTarget + halfWayTowardsStraigthAngle;
+			} else {
+				angle = 90 - (90 + angleBetweenThisAndTarget) / 2;
+			}
+		}
+
+		return angle;
+	}
 
   Gorilla.prototype.storeResultAI = function() {
     // if target exists store the distance, otherwhise the target has been destroyed
