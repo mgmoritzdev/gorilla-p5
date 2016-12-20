@@ -82,10 +82,10 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		const a =
 		      A.y * B.x +
 		      A.x * C.y +
-		      C.x * B.y -
-		      C.y * B.x -
-		      C.x * A.y -
-		      B.y * A.x;
+		      B.y * C.x -
+		      B.x * C.y -
+		      A.y * C.x -
+		      A.x * B.y;
 
 		const b =
 		      A.x * A.x * B.y +
@@ -102,11 +102,11 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		      C.x * C.x * B.x * A.y -
 		      A.x * A.x * C.x * B.y -
 		      B.x * B.x * A.x * C.y;
-		
-		return {			
-			a: a/a,
-			b: b/a,
-			c: c/a
+
+		return {
+			a: -a/Math.abs(a),
+			b: -b/Math.abs(a),
+			c: -c/Math.abs(a)
 		};
 	}
 

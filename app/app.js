@@ -343,8 +343,10 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 
 		if (typeof(currentGorilla.ai.throwResult) === 'undefined') {
 			currentGorilla.ai.throwResult = [];
+			currentGorilla.ai.vectors = [];
 		}
 		currentGorilla.ai.throwResult.push(currentGorilla.ai.target.position.dist(banana.physics.position));
+		currentGorilla.ai.vectors.push(banana.physics.position.copy());
 	}
 
 	function hitGround() {

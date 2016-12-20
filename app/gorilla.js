@@ -64,6 +64,16 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 		this.renderer.fill(255);
 		this.renderer.strokeWeight(1);
 		this.renderer.stroke(1);
+
+		this.renderer.point(500, 200);
+
+		if (typeof(this.equation) === 'function') {
+			for (let i = 1; i < this.renderer.width; i++) {
+				this.renderer.line(
+					i-1, this.equation(i-1),
+					i, this.equation(i));
+			}
+		}
 	};
 
 	Gorilla.prototype.onCollision = function(callback) {
@@ -104,14 +114,16 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
   };
 
 	Gorilla.prototype.generateFirstGuessAI = function() {
+		if (typeof(this.ai) === 'undefined' || typeof(this.ai.target) === 'undefined') { return; }
+
     var positionDiff = new Vector2(this.ai.target.position.x - this.position.x, this.ai.target.position.y - this.position.y);
 		this.ai.angle = baskara.findAngleToShoot(this.position, this.ai.target.position);
-		this.ai.strength = getFirstGuessStrength(positionDiff);
+		this.ai.strength = getFirstGuessStrength(this, positionDiff);
 		//this.ai.strength =  baskara.findStrengthToShoot(this.position, this.ai.target.position, this.physics.gravity, this.ai.angle);
 	};
 
-	function getFirstGuessStrength(positionDiff) {
-		var distance = this.ai.target.position.dist(this.position);
+	function getFirstGuessStrength(context, positionDiff) {
+		var distance = context.ai.target.position.dist(context.position);
 		return Math.pow(Math.abs(positionDiff.x), 0.5) / 2 +
 		    (positionDiff.y < 0 ? Math.pow(Math.abs(positionDiff.y), 0.5) / 4 : 0);
 	}
@@ -141,10 +153,21 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 	}
 
   Gorilla.prototype.storeResultAI = function() {
-    // if target exists store the distance, otherwhise the target has been destroyed
+	  // if target exists store the distance, otherwhise the target has been destroyed
+
+	  // TODO: test generated equation
+	  if (typeof(this.ai) !== 'undefined' && typeof(this.ai.throwResult) !== 'undefined') {
+		  this.equation = baskara.getEquationFromPoints(
+			  this.ai.vectors[0],
+			  this.ai.vectors[Math.trunc(this.ai.vectors.length / 2)],
+			  this.ai.vectors[this.ai.vectors.length - 1]);
+	  }
+
     if (this.ai.target) {
       if (typeof(this.ai.previousThrowResult) !== 'undefined') {
-        this.ai.aimProgress = getAverage(this.ai.previousThrowResult.sort().slice(0,3)) - getAverage(this.ai.throwResult.sort().slice(0,3));
+	      this.ai.aimProgress =
+		      getAverage(this.ai.previousThrowResult.sort().slice(0,3)) -
+		      getAverage(this.ai.throwResult.sort().slice(0,3));
       }
       this.ai.previousThrowResult = this.ai.throwResult;
       this.ai.throwResult = undefined;
