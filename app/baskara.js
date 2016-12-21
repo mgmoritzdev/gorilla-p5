@@ -77,7 +77,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 	}
 
 	// Get indexes using gaussian elimination
-	function get2ndDegreeIndexes2(A, B, C) {
+	function get2ndDegreeIndexes(A, B, C) {
 
 		var row1 = [ A.x * A.x, A.x, 1, A.y];
 		var row2 = [ B.x * B.x, B.x, 1, B.y];
@@ -117,7 +117,12 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 	}
 
 	// Solve using Cramer's Law
-	function get2ndDegreeIndexes(A, B, C) {
+	function get2ndDegreeIndexes2(A, B, C) {
+
+		const det = getDet3x3(
+			A.x * A.x, A.x, 1,
+			B.x * B.x, B.x, 1,
+			C.x * C.x, C.x, 1);
 
 		const a = getDet3x3(
 			A.y, A.x, 1,
@@ -136,9 +141,9 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 			C.x * C.x, C.x, C.y);
 		
 		return {
-			a: a,
-			b: b,
-			c: c
+			a: a/det,
+			b: b/det,
+			c: c/det
 		};
 	}
 

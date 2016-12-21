@@ -113,7 +113,7 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			const C = new Vector2(2, -15);
 
 			// { a: 1, b: -2, c: -15 }
-			const indexes = baskara.get2ndDegreeIndexes2(A, B, C);
+			const indexes = baskara.get2ndDegreeIndexes(A, B, C);
 			const equation = baskara.getEquationFromPoints(A, B, C);
 			
 			expect(typeof(indexes)).toBe('object');
@@ -136,7 +136,7 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			const C2 = new Vector2(2, -196);
 
 			// { a: 1, b: -25, c: -150 }
-			const indexes2 = baskara.get2ndDegreeIndexes2(A2, B2, C2);
+			const indexes2 = baskara.get2ndDegreeIndexes(A2, B2, C2);
 
 			expect(typeof(indexes2)).toBe('object');
 			expect(indexes2.a).toBeDefined();
@@ -173,7 +173,7 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			const B = new Vector2(1016, 73);
 			const C = new Vector2(1587, 1055);
 
-			var indexes = baskara.get2ndDegreeIndexes2(A, B, C);			
+			var indexes = baskara.get2ndDegreeIndexes(A, B, C);
 			var equation = baskara.getEquationFromPoints(A, B, C);
 			
 			expect(typeof(equation)).toBe('function');
