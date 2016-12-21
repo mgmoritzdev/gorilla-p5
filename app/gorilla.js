@@ -67,13 +67,13 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 
 		this.renderer.point(500, 200);
 
-		if (typeof(this.equation) === 'function') {
-			for (let i = 1; i < this.renderer.width; i++) {
-				this.renderer.line(
-					i-1, this.equation(i-1),
-					i, this.equation(i));
-			}
-		}
+		// if (typeof(this.equation) === 'function') {
+		// 	for (let i = 1; i < this.renderer.width; i++) {
+		// 		this.renderer.line(
+		// 			i-1, this.equation(i-1),
+		// 			i, this.equation(i));
+		// 	}
+		// }
 	};
 
 	Gorilla.prototype.onCollision = function(callback) {
@@ -152,18 +152,23 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 		return angle;
 	}
 
+	// TODO: no need to store results anymore
   Gorilla.prototype.storeResultAI = function() {
 	  // if target exists store the distance, otherwhise the target has been destroyed
 
 	  // TODO: test generated equation
 	  if (typeof(this.ai) !== 'undefined' && typeof(this.ai.throwResult) !== 'undefined') {
-		  this.equation = baskara.getEquationFromPoints(
-			  this.ai.vectors[0],
-			  this.ai.vectors[Math.trunc(this.ai.vectors.length / 2)],
-			  this.ai.vectors[this.ai.vectors.length - 1]);
+
+		  var A = this.ai.vectors[0];
+		  var B = this.ai.vectors[Math.trunc(this.ai.vectors.length / 2)];
+		  var C = this.ai.vectors[this.ai.vectors.length - 1];
+
+		  this.eqIndexes = baskara.get2ndDegreeIndexes(A, B, C);
+		  this.equation = baskara.getEquationFromPoints(A, B, C);
+		  this.ai.aimDefined = false;
 	  }
 
-    if (this.ai.target) {
+	  if (this.ai.target) {
       if (typeof(this.ai.previousThrowResult) !== 'undefined') {
 	      this.ai.aimProgress =
 		      getAverage(this.ai.previousThrowResult.sort().slice(0,3)) -
@@ -191,7 +196,37 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
   Gorilla.prototype.setAimStrategyAI = function(strengthOffset, angleOffset) {
     var randomOffsetFactor = Math.floor(Math.random() * 16 + 5);
 
-    if (!this.isStrategySet()) {
+
+	  // This code will replace all the rest
+	  if (typeof(this.equation) !== 'undefined') {
+		  // get modified roots
+		  // compare distance of roots with target
+		  // decide what to do and assing new strenght, keep angle always the same.
+		  var { a, b, c } = this.eqIndexes;
+		  var roots = baskara.findModifiedRoots(a, b, c, this.ai.target.position.y);
+		  var currentDistanceFromThis = Math.max(
+			  Math.abs(roots[0] - this.position.x),
+			  Math.abs(roots[1] - this.position.x));
+
+		  this.bananaDistance = (currentDistanceFromThis - Math.abs(this.ai.target.position.x - this.position.x));
+		  var xDistanceBetweenThisAndTarget = Math.abs(this.ai.target.position.x - this.position.x);
+		  if (currentDistanceFromThis > xDistanceBetweenThisAndTarget) {
+			  // reduceStrength
+			  this.setStrategy(strengthOffset, angleOffset, -1, 0);
+		  } else {
+			  // increase strength
+			  this.setStrategy(strengthOffset, angleOffset, 1, 0);
+		  }
+	  }
+
+	  if (typeof(this.ai.aimStrategy) === 'undefined'){		  
+		  this.setStrategy(strengthOffset, angleOffset, 1, 0);
+	  }
+		  
+	  // WARNING: Early return, all above is unrecheable code!
+	  return;
+
+	  if (!this.isStrategySet()) {
       this.setStrategy(strengthOffset, angleOffset, 0, 1);
       return;
     }
@@ -233,14 +268,29 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
     }
   };
 
-  Gorilla.prototype.setStrategy = function(strengthOffset, angleOffset, strengthStrategy, angleStrategy) {
+	Gorilla.prototype.setStrategy = function(strengthOffset, angleOffset, strengthStrategy, angleStrategy) {
+		var bananaDistanceX = this.bananaDistance || 1;
+
+		var bananaDistanceY = 1;
+		if (this.equation) {			
+			bananaDistanceY = Math.abs(this.equation(this.ai.target.position.x) - this.ai.target.position.y) || 1;
+		}
+		
+		var distanceFactor = Math.pow(bananaDistanceX * bananaDistanceX +
+		                              bananaDistanceY * bananaDistanceY, .5) / 400;
+		
+		
     this.ai.aimStrategy = {
-      strength: strengthOffset * strengthStrategy * 10,
-      angle: angleOffset * angleStrategy * 10
+      strength: strengthOffset * strengthStrategy * 15 * distanceFactor,
+      angle: angleOffset * angleStrategy * 15
     };
   };
 
-  Gorilla.prototype.updateAimAI = function() {
+	Gorilla.prototype.updateAimAI = function(strengthOffset, angleOffset) {
+		if (typeof(this.ai.aimStrategy) === 'undefined') {
+			this.setAimStrategyAI(strengthOffset, angleOffset);
+		}
+		
     this.ai.angle = geometry.wrapAngle(this.ai.angle + this.ai.aimStrategy.angle);
     this.ai.strength = wrapStrength(this.ai.strength + this.ai.aimStrategy.strength);
     this.ai.aimDefined = true;
@@ -251,7 +301,7 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
   };
 
   Gorilla.prototype.getAngleAxis = function(sensitivity) {
-    var angleAxis = this.ai.angle - this.angle;
+	  var angleAxis = this.ai.angle - this.angle;
     return getAxis(angleAxis, sensitivity);
   };
 
@@ -266,7 +316,7 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 			this.generateFirstGuessAI();
 		} else if (!this.aimDefined()) {
 			this.setAimStrategyAI(strengthOffset, angleOffset);
-			this.updateAimAI();
+			this.updateAimAI(strengthOffset, angleOffset);
 		}
 	};
 

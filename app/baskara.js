@@ -19,8 +19,29 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		return roots;
 	};
 
+	const findModifiedRoots = function (a, b, c, y) {		
+		var roots = [];
+		var delta = calculateModifiedDelta(a, b, c, y);
+
+		if (delta == 0) {
+			roots.push(-b / (2 * a));
+		} else {
+
+			var sqrtOfDelta = Math.sqrt(delta);
+			
+			roots.push((-b + sqrtOfDelta) / (2 * a));
+			roots.push((-b - sqrtOfDelta) / (2 * a));
+		}
+		
+		return roots;
+	};
+
 	const calculateDelta = function(a, b, c) {
-		return b*b - 4 * a * c;	
+		return b * b - 4 * a * c;	
+	};
+
+	const calculateModifiedDelta = function(a, b, c, y) {
+		return calculateDelta(a, b, c - y);
 	};
 
 	function findAngleToShoot(A, B) {
@@ -77,7 +98,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 	}
 
 	// Get indexes using gaussian elimination
-	function get2ndDegreeIndexes(A, B, C) {
+	function get2ndDegreeIndexes2(A, B, C) {
 
 		var row1 = [ A.x * A.x, A.x, 1, A.y];
 		var row2 = [ B.x * B.x, B.x, 1, B.y];
@@ -117,7 +138,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 	}
 
 	// Solve using Cramer's Law
-	function get2ndDegreeIndexes2(A, B, C) {
+	function get2ndDegreeIndexes(A, B, C) {
 
 		const det = getDet3x3(
 			A.x * A.x, A.x, 1,
@@ -179,7 +200,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 
 	function getEquationFromPoints(A, B, C) {
 
-		const {a, b, c} = get2ndDegreeIndexes2(A, B, C);
+		const {a, b, c} = get2ndDegreeIndexes(A, B, C);
 		return function(x) {
 			return a * x * x + b * x + c;
 		};
@@ -193,7 +214,8 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 	  getB: getB,
 	  getC: getC,
 	  get2ndDegreeIndexes: get2ndDegreeIndexes,
-	  get2ndDegreeIndexes2: get2ndDegreeIndexes2,
-	  getEquationFromPoints: getEquationFromPoints
+	  getEquationFromPoints: getEquationFromPoints,
+	  calculateModifiedDelta: calculateModifiedDelta,
+	  findModifiedRoots: findModifiedRoots
   };
 });

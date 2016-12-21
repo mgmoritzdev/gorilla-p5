@@ -20,7 +20,28 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			expect(roots).toContain(-3);
 			expect(roots).toContain(5);
 			
-		});		
+		});
+	});
+
+	describe('Should solve the baskara equation for non-zero y', function() {
+
+		// the x values where y is y0
+		it('find modified delta', function() {
+			const a = 1, b = -2, c = -15, y = 1;
+			const delta = baskara.calculateModifiedDelta(a, b, c, y);
+			
+			expect(delta).toBe(68);
+		});
+
+		it('finding its roots', function () {
+			const a = 1, b = -2, c = -15, y = 1;
+
+			const roots = baskara.findModifiedRoots(a, b, c, y);
+			
+			expect(roots[0]).toBeCloseTo(5.123, 2);
+			expect(roots[1]).toBeCloseTo(-3.123, 2);
+			
+		});
 	});
 
 	describe('Should find a good angle to shoot', function() {

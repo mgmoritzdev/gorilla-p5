@@ -341,6 +341,9 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 			return;
 		}
 
+		if (processing.frameCount % 20 !== 0) {
+			return;
+		}
 		if (typeof(currentGorilla.ai.throwResult) === 'undefined') {
 			currentGorilla.ai.throwResult = [];
 			currentGorilla.ai.vectors = [];
