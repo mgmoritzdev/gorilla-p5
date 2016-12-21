@@ -113,8 +113,9 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			const C = new Vector2(2, -15);
 
 			// { a: 1, b: -2, c: -15 }
-			const indexes = baskara.get2ndDegreeIndexes(A, B, C);
-
+			const indexes = baskara.get2ndDegreeIndexes2(A, B, C);
+			const equation = baskara.getEquationFromPoints(A, B, C);
+			
 			expect(typeof(indexes)).toBe('object');
 			expect(indexes.a).toBeDefined();
 			expect(indexes.b).toBeDefined();
@@ -122,6 +123,9 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			expect(indexes.a).toBe(1);
 			expect(indexes.b).toBe(-2);
 			expect(indexes.c).toBe(-15);
+			expect(equation(A.x)).toBe(A.y);
+			expect(equation(B.x)).toBe(B.y);
+			expect(equation(C.x)).toBe(C.y);
 
 			// given the equation f(x) = x² - 25x - 150
 			// f(0) = -150
@@ -132,7 +136,7 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			const C2 = new Vector2(2, -196);
 
 			// { a: 1, b: -25, c: -150 }
-			const indexes2 = baskara.get2ndDegreeIndexes(A2, B2, C2);
+			const indexes2 = baskara.get2ndDegreeIndexes2(A2, B2, C2);
 
 			expect(typeof(indexes2)).toBe('object');
 			expect(indexes2.a).toBeDefined();
@@ -169,14 +173,14 @@ define(['baskara', 'vector2'],function (baskara, Vector2) {
 			const B = new Vector2(1016, 73);
 			const C = new Vector2(1587, 1055);
 
-			var indexes = baskara.get2ndDegreeIndexes(A, B, C);
-			console.log(indexes);
+			var indexes = baskara.get2ndDegreeIndexes2(A, B, C);			
 			var equation = baskara.getEquationFromPoints(A, B, C);
-
+			
 			expect(typeof(equation)).toBe('function');
-			expect(equation(A.x)).toBe(A.y);
-			expect(equation(B.x)).toBe(B.y);
-			expect(equation(C.x)).toBe(C.y);
-		});
+			expect(equation(A.x)).toBeCloseTo(A.y, 2);
+			expect(equation(B.x)).toBeCloseTo(B.y, 2);
+			expect(equation(C.x)).toBeCloseTo(C.y, 2);
+		});		
 	});
+
 });

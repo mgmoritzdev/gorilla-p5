@@ -76,43 +76,105 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		return (-Bx * Bx - getB(angle) * Bx);
 	}
 
-	// Solve using Cramer's Law
-	function get2ndDegreeIndexes(A, B, C) {
+	// Get indexes using gaussian elimination
+	function get2ndDegreeIndexes2(A, B, C) {
+
+		var row1 = [ A.x * A.x, A.x, 1, A.y];
+		var row2 = [ B.x * B.x, B.x, 1, B.y];
+		var row3 = [ C.x * C.x, C.x, 1, C.y];
+ 
+		var sortedRows = [ row1, row2, row3 ];
+				
+		// larger x goes first
+		sortedRows.sort((p1, p2) => p2[0] - p1[0]);
+				
+		var factor;
+
+		if (Math.abs(sortedRows[1][0]) > 0) {
+			factor = sortedRows[0].map(x => x * (-sortedRows[1][0] / sortedRows[0][0]));
+			sortedRows[1] = sortedRows[1].map((x, index) => x + factor[index]);
+		}
+
+		if (Math.abs(sortedRows[2][0]) > 0) {
+			factor = sortedRows[0].map(x => x * (-sortedRows[2][0] / sortedRows[0][0]));
+			sortedRows[2] = sortedRows[2].map((x, index) => x + factor[index]);
+		}
 		
-		const a =
-		      A.y * B.x +
-		      A.x * C.y +
-		      B.y * C.x -
-		      B.x * C.y -
-		      A.y * C.x -
-		      A.x * B.y;
+		if (Math.abs(sortedRows[2][1]) > 0) {
+			factor = sortedRows[1].map(x => x * (-sortedRows[2][1] / sortedRows[1][1]));
+			sortedRows[2] = sortedRows[2].map((x, index) => x + factor[index]);		
+		}
 
-		const b =
-		      A.x * A.x * B.y +
-		      C.x * C.x * A.y +
-		      B.x * B.x * C.y -
-		      C.x * C.x * B.y -
-		      A.x * A.x * C.y -
-		      B.x * B.x * A.y;
-
-		const c =
-		      A.x * A.x * B.x * C.y +
-		      C.x * C.x * A.x * B.y +
-		      B.x * B.x * C.x * A.y -
-		      C.x * C.x * B.x * A.y -
-		      A.x * A.x * C.x * B.y -
-		      B.x * B.x * A.x * C.y;
+		const c = sortedRows[2][3] / sortedRows[2][2];
+		const b = (sortedRows[1][3] - c * sortedRows[1][2]) / sortedRows[1][1];
+		const a = (sortedRows[0][3] - c * sortedRows[0][2] - b * sortedRows[0][1]) / sortedRows[0][0];
 
 		return {
-			a: -a/Math.abs(a),
-			b: -b/Math.abs(a),
-			c: -c/Math.abs(a)
+			a: a,
+			b: b,
+			c: c
 		};
+	}
+
+	// Solve using Cramer's Law
+	function get2ndDegreeIndexes(A, B, C) {
+
+		const a = getDet3x3(
+			A.y, A.x, 1,
+			B.y, B.x, 1,
+			C.y, C.x, 1);
+
+		const b = getDet3x3(
+			A.x * A.x, A.y, 1,
+			B.x * B.x, B.y, 1,
+			C.x * C.x, C.y, 1);
+
+
+		const c = getDet3x3(
+			A.x * A.x, A.x, A.y,
+			B.x * B.x, B.x, B.y,
+			C.x * C.x, C.x, C.y);
+		
+		return {
+			a: a,
+			b: b,
+			c: c
+		};
+	}
+
+	/*find determinant of a 3x3 matrix using co-factor method
+	// | a11 | a12 | a13 |
+	// | a21 | a22 | a23 | = 
+	// | a31 | a32 | a33 |
+
+	// a11 * 
+	// | a22 | a23 |
+	// | a32 | a33 | 
+
+	// - a12 *
+	// | a21 | a23 |
+	// | a31 | a33 |
+
+	// + a13 *
+	// | a21 | a22 |
+	// | a31 | a32 |
+	*/
+	function getDet3x3(a11, a12, a13,
+	            a21, a22, a23,
+	            a31, a32, a33) {
+
+		return a11 * getDet2x2(a22, a23, a32, a33) -
+			a12 * getDet2x2(a21, a23, a31, a33) +
+			a13 * getDet2x2(a21, a22, a31, a32);
+	}
+	
+	function getDet2x2(a11, a12, a21, a22) {
+		return a11 * a22 - a21 * a12;
 	}
 
 	function getEquationFromPoints(A, B, C) {
 
-		const {a, b, c} = get2ndDegreeIndexes(A, B, C);
+		const {a, b, c} = get2ndDegreeIndexes2(A, B, C);
 		return function(x) {
 			return a * x * x + b * x + c;
 		};
@@ -126,6 +188,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 	  getB: getB,
 	  getC: getC,
 	  get2ndDegreeIndexes: get2ndDegreeIndexes,
+	  get2ndDegreeIndexes2: get2ndDegreeIndexes2,
 	  getEquationFromPoints: getEquationFromPoints
   };
 });
