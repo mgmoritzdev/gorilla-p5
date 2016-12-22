@@ -1,6 +1,0 @@
-{
-    "quotmark" : false,
-    "undef" : true,
-    "predef" : [ "define", "require" ],
-    "esversion": 6
-}
