@@ -1,11 +1,11 @@
 define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], function (Vector2, geometry, Physics, Collider, baskara) {
 
-	const cannonLength = 30;
-	const gorillaDiameter = 40;
+	var cannonLength = 30;
+	var gorillaDiameter = 40;
 	
 	var Gorilla = function(name, position, color, strength, angle, npc, mass, size, gravity) {
 
-	  let gorilla = this;
+	  var gorilla = this;
 
 	  gorilla.name = name;
 	  gorilla.position = position;
@@ -18,7 +18,7 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 	  gorilla.physics.setPosition(gorilla.position);
 	  gorilla.physics.addRigidBody(mass, gravity);
 	  
-	  const collider = new Collider();
+	  var collider = new Collider();
 	  gorilla.collider = collider;
 	  
 	  collider.setName(gorilla.name);
@@ -68,7 +68,7 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 		this.renderer.point(500, 200);
 
 		// if (typeof(this.equation) === 'function') {
-		// 	for (let i = 1; i < this.renderer.width; i++) {
+		// 	for (var i = 1; i < this.renderer.width; i++) {
 		// 		this.renderer.line(
 		// 			i-1, this.equation(i-1),
 		// 			i, this.equation(i));
@@ -81,7 +81,11 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 	};
 
 	Gorilla.prototype.getGorillaCannonTip = function() {
-		const { color, strength, angle, position } = this;
+		var color, strength, angle, position;
+		color = this.color;
+		strength = this.strength;
+		angle = this.angle;
+		position = this.position;
 
 		return new Vector2(
 			position.x + (cannonLength + strength) * Math.cos(geometry.radians(angle)),
@@ -156,10 +160,9 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
   Gorilla.prototype.storeResultAI = function() {
 	  // if target exists store the distance, otherwhise the target has been destroyed
 
-	  // TODO: test generated equation
 	  if (typeof(this.ai) !== 'undefined' && typeof(this.ai.throwResult) !== 'undefined') {
 
-		  var A = this.ai.vectors[0];
+		  var A = this.getGorillaCannonTip();
 		  var B = this.ai.vectors[Math.trunc(this.ai.vectors.length / 2)];
 		  var C = this.ai.vectors[this.ai.vectors.length - 1];
 
@@ -202,7 +205,11 @@ define(['vector2', 'geometry', 'physics', 'circularCollider', 'baskara'], functi
 		  // get modified roots
 		  // compare distance of roots with target
 		  // decide what to do and assing new strenght, keep angle always the same.
-		  var { a, b, c } = this.eqIndexes;
+		  var a, b, c;
+		  a = this.eqIndexes.a;
+		  b = this.eqIndexes.b;
+		  c = this.eqIndexes.c;
+
 		  var roots = baskara.findModifiedRoots(a, b, c, this.ai.target.position.y);
 		  var currentDistanceFromThis = Math.max(
 			  Math.abs(roots[0] - this.position.x),

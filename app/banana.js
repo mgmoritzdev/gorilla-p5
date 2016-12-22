@@ -2,7 +2,7 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
 
 	var Banana = function(mass, gravity, size) {
 		
-		let banana = this;
+		var banana = this;
 		
 		banana.name = 'banana';
 		banana.isActive = false;
@@ -13,7 +13,7 @@ define(['physics', 'circularCollider'], function (Physics, Collider) {
 
 		banana.size = size;
 		
-		const collider = new Collider();
+		var collider = new Collider();
 
 		collider.setDiameter(size);
 		collider.setName(banana.name);

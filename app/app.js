@@ -1,8 +1,8 @@
 define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], function(p5, Vector2, Gorilla, Banana, cm) {
 
-	let processing;
+	var processing;
 
-	let banana;
+	var banana;
 	var gorillas;
 	var currentGorilla;
 	
@@ -63,7 +63,9 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		processing.background(255);
 
 		if (!gameEnded) {
-			gorillas.forEach(g => g.render());
+			gorillas.forEach(function(g) {
+				g.render();
+			});
 
 			if (banana.isActive) {
 				updateBanana();
@@ -162,7 +164,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 			endGameText = 'Parabéns!';
 		}
 
-		var { color } = gorilla;
+		var color = gorilla.color;
 
 		processing.noStroke();
 		processing.textAlign(processing.CENTER);
@@ -175,10 +177,15 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 
 	function drawTarget() {
 		processing.noStroke();
-		var { color, strength, angle, npc } = currentGorilla;
+		var color, strength, angle, npc;
+		color = currentGorilla.color;
+		strength = currentGorilla.strength;
+		angle = currentGorilla.angle;
+		npc = currentGorilla.npc;
 
-		const textAlignment = npc ? processing.RIGHT : processing.LEFT;
-		const textX = npc ? processing.width - 60 : 10;
+
+		var textAlignment = npc ? processing.RIGHT : processing.LEFT;
+		var textX = npc ? processing.width - 60 : 10;
 
 		processing.fill(color);
 		processing.textAlign(textAlignment);
@@ -258,7 +265,9 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	}
 
 	function destroyGorilla(gorilla) {
-		gorillas = gorillas.filter(g => g !== gorilla);
+		gorillas = gorillas.filter(function(g) {
+			return g !== gorilla;
+		});
 
 		explosionSound.setVolume(0.3);
 		explosionSound.play();
@@ -278,28 +287,6 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	function updateBanana() {
 
 		updateThrowResult();
-		// var enemyDestroyed = getEnemyDestroyed();
-		// var enemyDestroyedIndex = gorillas.indexOf(enemyDestroyed);
-
-		if (typeof(enemyDestroyed) !== 'undefined') {
-
-			// explosionSound.setVolume(0.3);
-			// explosionSound.play();
-
-			// if (enemyDestroyedIndex < currentPlayerIndex) {
-			// 	currentPlayerIndex--;
-			// }			
-			// gorillas = gorillas.filter(x => x !== enemyDestroyed);
-			// isBananaFlying = false;
-
-			// callNextPlayer();
-
-			// if (checkEndGameState()) {
-			// 	gameEnded = true;
-			// }
-		}
-		
-
 		if (hitGround()) {
 			banana.isActive = false;
 			currentGorilla.storeResultAI();
@@ -318,22 +305,14 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	}
 
 	function noMorePlayers() {
-		return gorillas.filter(x => !x.npc).length === 0;
+		return gorillas.filter(function(x) {
+			return !x.npc;
+		}).length === 0;
 	}
 
 	function callNextPlayer() {
 		var currentGorillaIndex = gorillas.indexOf(currentGorilla);
 		currentGorilla = gorillas[++currentGorillaIndex % gorillas.length];
-	}
-
-	function getEnemyDestroyed() {
-		var hitGorilla = gorillas
-			.filter(x => x !== currentGorilla)
-			.filter(x => x.destroy);
-
-		if (hitGorilla.length > 0) {
-			return hitGorilla[0];
-		}
 	}
 
 	function updateThrowResult() {

@@ -1,6 +1,6 @@
 define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vector2) {
 
-	let colliders = [];
+	var colliders = [];
 	
 	function addCollider(collider) {
 
@@ -14,7 +14,7 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 
 	function removeCollider(collider) {
 
-		const index = colliders.indexOf(collider);
+		var index = colliders.indexOf(collider);
 
 		if (index > -1) {
 			colliders.splice(index, 1);
@@ -23,11 +23,15 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 	}
 
 	function sortColliders() {
-		colliders = colliders.sort((x, y) => x.static ? 1 : -1 );
+		colliders = colliders.sort(function(x, y) {
+			return x.static ? 1 : -1;
+		});
 	}
 
 	function getDynamicColliders() {
-		return colliders.filter((x) => !x.static);
+		return colliders.filter(function(x) {
+			return !x.static;
+		});
 	}
 
 	function getColliders() {
@@ -40,13 +44,13 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 
 	function update() {
 
-		const dynColl = getDynamicColliders();
+		var dynColl = getDynamicColliders();
 		
-		for (let i = 0; i < dynColl.length; i++) {
-			for (let j = i + 1; j < colliders.length; j++) {
-				const coll1 = colliders[i];
-				const coll2 = colliders[j];
-				let collision = checkCollision(coll1, coll2);
+		for (var i = 0; i < dynColl.length; i++) {
+			for (var j = i + 1; j < colliders.length; j++) {
+				var coll1 = colliders[i];
+				var coll2 = colliders[j];
+				var collision = checkCollision(coll1, coll2);
 				if (collision !== null) {
 					coll1.notify(collision);
 					coll2.notify(invertNormal(collision));
@@ -66,21 +70,23 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 
 	// actual implementation should move to support other collider types
 	function checkCollision(coll1, coll2) {
-		const sqDist = coll1.position.sqDist(coll2.position);
-		const avgDiam = coll1.diameter/2 + coll2.diameter/2;
-		const sqAvgDiam = avgDiam * avgDiam;
+		var sqDist = coll1.position.sqDist(coll2.position);
+		var avgDiam = coll1.diameter/2 + coll2.diameter/2;
+		var sqAvgDiam = avgDiam * avgDiam;
 		
 		if (sqDist > sqAvgDiam) {
 			return null;
 		}
-		const penetration = avgDiam - coll1.position.dist(coll2.position);
-		const normal = coll2.position.copy();
+		var penetration = avgDiam - coll1.position.dist(coll2.position);
+		var normal = coll2.position.copy();
 		normal.subtractVector(coll1.position);
 		return new Collision(coll1, coll2, penetration, normal);
 	}
 
 	function renderAllColliders() {
-		colliders.forEach(c => c.render());
+		colliders.forEach(function(c) {
+			return c.render();
+		});
 	}
 
 	return {

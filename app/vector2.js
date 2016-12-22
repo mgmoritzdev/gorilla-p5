@@ -14,7 +14,7 @@ define([], function () {
   };
 
 	Vector2.prototype.subtractVector = function(otherVector) {
-		const auxVec = otherVector.copy();
+		var auxVec = otherVector.copy();
 		auxVec.multiplyConst(-1);
 		this.addVector(auxVec);
 	};

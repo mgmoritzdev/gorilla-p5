@@ -53,7 +53,7 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
 			return;
 		}
 
-		const index = this.forces.indexOf(force);
+		var index = this.forces.indexOf(force);
 
 		if (index > -1) {
 			this.forces.splice(index, 1);
@@ -100,7 +100,7 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
       return;
     }
 
-    const index = this.colliders.indexOf(collider);
+    var index = this.colliders.indexOf(collider);
 
     if (index > -1) {
       this.colliders.splice(index, 1);
@@ -110,7 +110,9 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
 
 	Physics.prototype.addCallbackToCollider = function(callback) {	
 
-		this.colliders.forEach(coll => coll.subscribe(callback));		
+		this.colliders.forEach(function(coll) {
+			return coll.subscribe(callback);
+		});
 	};
 
   Physics.prototype.update = function() {
@@ -134,7 +136,7 @@ define(['vector2', 'collisionManager'], function (Vector2, cm) {
 		}
 		
 		for(var i = 0; i < this.forces.length; i++) {
-			const acc = this.forces[i].copy();
+			var acc = this.forces[i].copy();
 			acc.multiplyConst(1/this.mass);
 			this.acceleration.addVector(acc);
 		}

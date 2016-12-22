@@ -32,7 +32,9 @@ define(['vector2'], function(Vector2) {
 	};
 
 	Collider.prototype.notify = function(collision) {
-		this.subscribers.forEach(cb => cb.call(this, collision));
+		this.subscribers.forEach(function(cb) {
+			return cb.call(this, collision);
+		});
 	};
 	
 	return Collider;

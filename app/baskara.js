@@ -2,7 +2,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 
 	// Bàskara equation: f(x) = a*x²+b*x+c
 	
-	const findRoots = function (a, b, c) {		
+	var findRoots = function (a, b, c) {		
 		var roots = [];
 		var delta = calculateDelta(a, b, c);		
 
@@ -19,7 +19,7 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		return roots;
 	};
 
-	const findModifiedRoots = function (a, b, c, y) {		
+	var findModifiedRoots = function (a, b, c, y) {		
 		var roots = [];
 		var delta = calculateModifiedDelta(a, b, c, y);
 
@@ -36,11 +36,11 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		return roots;
 	};
 
-	const calculateDelta = function(a, b, c) {
+	var calculateDelta = function(a, b, c) {
 		return b * b - 4 * a * c;	
 	};
 
-	const calculateModifiedDelta = function(a, b, c, y) {
+	var calculateModifiedDelta = function(a, b, c, y) {
 		return calculateDelta(a, b, c - y);
 	};
 
@@ -81,10 +81,10 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		}
 
 		// TODO: this is buggy
-		const arbitraryConstant = 0.000005;
-		const vx = arbitraryConstant * gravity * (-b*b/(2*a) + c);
-		const tanAngle = Math.tan(geometry.radians(angle));
-		const strength = Math.abs(vx * Math.sqrt(1 + tanAngle * tanAngle));
+		var arbitraryConstant = 0.000005;
+		var vx = arbitraryConstant * gravity * (-b*b/(2*a) + c);
+		var tanAngle = Math.tan(geometry.radians(angle));
+		var strength = Math.abs(vx * Math.sqrt(1 + tanAngle * tanAngle));
 
 		return strength;
 	};
@@ -107,28 +107,31 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		var sortedRows = [ row1, row2, row3 ];
 				
 		// larger x goes first
-		sortedRows.sort((p1, p2) => p2[0] - p1[0]);
+		sortedRows.sort(function(p1, p2) {
+			return p2[0] - p1[0];
+		});
 				
 		var factor;
 
-		if (Math.abs(sortedRows[1][0]) > 0) {
-			factor = sortedRows[0].map(x => x * (-sortedRows[1][0] / sortedRows[0][0]));
-			sortedRows[1] = sortedRows[1].map((x, index) => x + factor[index]);
-		}
+		eliminate({ arr: sortedRows,
+		            baseIndex: 0,
+		            operandIndex: 1,
+		            columnToEliminate: 0});
 
-		if (Math.abs(sortedRows[2][0]) > 0) {
-			factor = sortedRows[0].map(x => x * (-sortedRows[2][0] / sortedRows[0][0]));
-			sortedRows[2] = sortedRows[2].map((x, index) => x + factor[index]);
-		}
-		
-		if (Math.abs(sortedRows[2][1]) > 0) {
-			factor = sortedRows[1].map(x => x * (-sortedRows[2][1] / sortedRows[1][1]));
-			sortedRows[2] = sortedRows[2].map((x, index) => x + factor[index]);		
-		}
+		eliminate({ arr: sortedRows,
+		            baseIndex: 0,
+		            operandIndex: 2,
+		            columnToEliminate: 0});
 
-		const c = sortedRows[2][3] / sortedRows[2][2];
-		const b = (sortedRows[1][3] - c * sortedRows[1][2]) / sortedRows[1][1];
-		const a = (sortedRows[0][3] - c * sortedRows[0][2] - b * sortedRows[0][1]) / sortedRows[0][0];
+
+		eliminate({ arr: sortedRows,
+		            baseIndex: 1,
+		            operandIndex: 2,
+		            columnToEliminate: 1});
+
+		var c = sortedRows[2][3] / sortedRows[2][2];
+		var b = (sortedRows[1][3] - c * sortedRows[1][2]) / sortedRows[1][1];
+		var a = (sortedRows[0][3] - c * sortedRows[0][2] - b * sortedRows[0][1]) / sortedRows[0][0];
 
 		return {
 			a: a,
@@ -137,26 +140,48 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 		};
 	}
 
+	// Gaussian Elimination
+	function eliminate(obj) {
+		var arr, baseIndex, operandIndex, columnToEliminate;
+		arr = obj.arr;
+		baseIndex = obj.baseIndex;
+		operandIndex = obj.operandIndex;
+		columnToEliminate = obj.columnToEliminate;
+		
+		if (Math.abs(arr[operandIndex][columnToEliminate] > 0)) {
+			var factor = getFactor(arr, baseIndex, operandIndex, columnToEliminate);
+			arr[operandIndex] = arr[operandIndex].map(function(x, index) {
+				return x + factor[index];
+			});
+		}
+	}
+	
+	function getFactor(arr, baseIndex, operandIndex, columnToEliminate) {
+		return arr[baseIndex].map(function (x) {
+			return x * (-arr[baseIndex][columnToEliminate] / arr[operandIndex][columnToEliminate]);
+		});
+	}
+
 	// Solve using Cramer's Law
 	function get2ndDegreeIndexes(A, B, C) {
 
-		const det = getDet3x3(
+		var det = getDet3x3(
 			A.x * A.x, A.x, 1,
 			B.x * B.x, B.x, 1,
 			C.x * C.x, C.x, 1);
 
-		const a = getDet3x3(
+		var a = getDet3x3(
 			A.y, A.x, 1,
 			B.y, B.x, 1,
 			C.y, C.x, 1);
 
-		const b = getDet3x3(
+		var b = getDet3x3(
 			A.x * A.x, A.y, 1,
 			B.x * B.x, B.y, 1,
 			C.x * C.x, C.y, 1);
 
 
-		const c = getDet3x3(
+		var c = getDet3x3(
 			A.x * A.x, A.x, A.y,
 			B.x * B.x, B.x, B.y,
 			C.x * C.x, C.x, C.y);
@@ -200,14 +225,19 @@ define(['vector2', 'geometry'], function (Vector2, geometry) {
 
 	function getEquationFromPoints(A, B, C) {
 
-		const {a, b, c} = get2ndDegreeIndexes(A, B, C);
+		var obj = get2ndDegreeIndexes(A, B, C);
+		var a, b, c;
+		a = obj.a;
+		b = obj.b;
+		c = obj.c;
+		
 		return function(x) {
 			return a * x * x + b * x + c;
 		};
 	}
 	
   return {
-	  calculateDelta, calculateDelta,
+	  calculateDelta: calculateDelta,
 	  findRoots: findRoots,
 	  findAngleToShoot: findAngleToShoot,
 	  findStrengthToShoot: findStrengthToShoot,
