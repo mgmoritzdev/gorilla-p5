@@ -57,7 +57,7 @@ define(['collider', 'collision', 'vector2'], function(Collider, Collision, Vecto
 				}
 			}	
 		}
-	};
+	}
 
 	function invertNormal(collision) {
 		return new Collision(

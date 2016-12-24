@@ -8,7 +8,6 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	
 	var wind;
 	
-	var isBananaFlying = false;
 	var gameEnded = false;
 	var strengthAxis = 0;
 	var angleAxis = 0;
