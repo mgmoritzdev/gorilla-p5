@@ -23,9 +23,9 @@ define(['inputManager'],function (im) {
 		});
 
 		it('remove a subscription', function() {
-			im.subscribe(obj1);
-			im.subscribe(obj2);
-			im.unsubscribe(obj1);
+			var sub1 = im.subscribe(obj1);
+			var sub2 = im.subscribe(obj2);
+			im.unsubscribe(sub1);
 
 			expect(im.countSubscribers()).toBe(1);
 		});
@@ -64,12 +64,12 @@ define(['inputManager'],function (im) {
 			onEvent('onClickDrag');
 		});
 
-		it('onKeyPress', function() {
-			onEvent('onKeyPress');
+		it('onKeyEnter', function() {
+			onEvent('onKeyEnter');
 		});
 
-		it('onKeyRelease', function() {
-			onEvent('onKeyRelease');
+		it('onKeyExit', function() {
+			onEvent('onKeyExit');
 		});
 	});
 
@@ -85,7 +85,8 @@ define(['inputManager'],function (im) {
 			spyOn(obj, eventName).and.callThrough();
 
 			var event = 'success';
-			im.subscribe(obj);
+			var sub = im.subscribe(obj);
+			im.registerCallback(sub, eventName, obj[eventName]);
 			im[eventName](event);
 
 			expect(obj[eventName]).toHaveBeenCalled();
@@ -104,14 +105,52 @@ define(['inputManager'],function (im) {
 			onEvent('onClickDrag');
 		});
 
-		it('onKeyPress', function() {
-			onEvent('onKeyPress');
+		it('onKeyEnter', function() {
+			onEvent('onKeyEnter');
 		});
 
-		it('onKeyRelease', function() {
-			onEvent('onKeyRelease');
+		it('onKeyExit', function() {
+			onEvent('onKeyExit');
 		});
 
 	});
 
+	describe('Should allow clients to set the region', function() {
+		function onEvent(eventName) {
+
+			var obj = {};
+			obj[eventName] = function(event) {
+				obj.a = event;
+			};
+
+			function onAreaCallback(event) {
+				var rectangle = { x: 10, y: 10, w: 10, h: 10 };
+				return (event.x > rectangle.x &&
+				        event.x < rectangle.x + rectangle.w &&
+				        event.y > rectangle.y && event.y < rectangle.y + rectangle.h);
+			}
+			
+			spyOn(obj, eventName).and.callThrough();
+
+			var event1 = { x: 15, y: 15 };
+			var event2 = { x: 15, y: 25 };
+			
+			var sub = im.subscribe(obj);
+			im.setEventArea(sub, onAreaCallback);
+			
+			im[eventName](event1);
+			im[eventName](event2);
+
+			expect(obj[eventName]).toHaveBeenCalled();
+			expect(obj.a).toBe(event1); // and not event2, given it doesn't trigger the callback.
+		}
+
+		it('where the input triggers the callback', function() {
+			onEvent('onClickEnter');
+			onEvent('onClickExit');
+			onEvent('onClickDrag');
+			onEvent('onKeyEnter');
+			onEvent('onKeyExit');
+		});
+	});
 });

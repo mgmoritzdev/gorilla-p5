@@ -3,19 +3,31 @@ define([], function() {
 	var subscribers = [];	
 
 	function subscribe(obj) {
-		ensureProperties(obj);
-		subscribers.push(obj);
+		var sub = { obj: obj };
+		sub.callbacks = [];
+		ensureProperties(sub, obj);
+		subscribers.push(sub);
+
+		return sub;
 	}
 
-	function unsubscribe(obj) {
-		var index = subscribers.indexOf(obj);
+	function unsubscribe(sub) {
+		var index = subscribers.indexOf(sub);
 		if (index > -1) {
 			subscribers.splice(index, 1);
 		}
 	}
 
+	function registerCallback(sub, eventName, callback) {
+		sub[eventName] = callback;
+	}
+
 	function removeAllSubscriptions() {
 		subscribers.length = 0;
+	}
+
+	function fireEvent(eventName, event) {
+		onEvent(eventName, event);
 	}
 	
 	function onClickEnter(event) {
@@ -30,49 +42,55 @@ define([], function() {
 		onEvent('onClickDrag', event);
 	}
 
-	function onKeyPress(event) {
-		onEvent('onKeyPress', event);
+	function onKeyEnter(event) {
+		onEvent('onKeyEnter', event);
 	}
 
-	function onKeyRelease(event) {
-		onEvent('onKeyRelease', event);
+	function onKeyExit(event) {
+		onEvent('onKeyExit', event);
 	}
 
 	function countSubscribers() {
 		return subscribers.length;
 	}
 
+	function setEventArea(sub, callback) {
+		sub.onEventArea = callback;
+	}
+
 	/* HELPERS */
 
 	function onEvent(eventName, event) {
 		subscribers.forEach(function(s) {
-			if (s.onEventArea()) {
+			if (s.onEventArea(event)) {
 				s[eventName](event);
 			}
 		});
 	}
 
-	function ensureProperties(obj) {
-		ensureOnEventArea(obj);
-		ensureDefaultEvent(obj, 'onClickEnter');
-		ensureDefaultEvent(obj, 'onClickExit');
-		ensureDefaultEvent(obj, 'onClickDrag');
-		ensureDefaultEvent(obj, 'onKeyPress');
-		ensureDefaultEvent(obj, 'onKeyRelease');
+	function ensureProperties(sub, obj) {
+		ensureOnEventArea(sub, obj);
+		ensureDefaultEvent(sub, obj, 'onClickEnter');
+		ensureDefaultEvent(sub, obj, 'onClickExit');
+		ensureDefaultEvent(sub, obj, 'onClickDrag');
+		ensureDefaultEvent(sub, obj, 'onKeyEnter');
+		ensureDefaultEvent(sub, obj, 'onKeyExit');
 	}
 	
-	function ensureDefinition(prop, type, obj, defaultValue) {
+	function ensureDefinition(prop, type, sub, obj, defaultValue) {
 		if (typeof(obj[prop]) !== type) {
-			obj[prop] = defaultValue;
+			sub[prop] = defaultValue;
+		} else {
+			sub[prop] = obj[prop];
 		}
 	}
 	
-	function ensureOnEventArea(obj) {
-		ensureDefinition('onEventArea', 'function', obj, function() { return true; });
+	function ensureOnEventArea(sub, obj) {
+		ensureDefinition('onEventArea', 'function', sub, obj, function() { return true; });
 	}
 
-	function ensureDefaultEvent(obj, eventName) {
-		ensureDefinition(eventName, 'function', obj, function() { });
+	function ensureDefaultEvent(sub, obj, eventName) {
+		ensureDefinition(eventName, 'function', sub, obj, function() { });
 	}
 
 	/* EXTERNAL INTERFACE */
@@ -80,12 +98,14 @@ define([], function() {
 	return {
 		subscribe: subscribe,
 		unsubscribe: unsubscribe,
+		registerCallback: registerCallback,
+		setEventArea: setEventArea,
 		removeAllSubscriptions: removeAllSubscriptions,
 		onClickEnter: onClickEnter,
 		onClickExit: onClickExit,
 		onClickDrag: onClickDrag,
-		onKeyPress: onKeyPress,
-		onKeyRelease: onKeyRelease,
+		onKeyEnter: onKeyEnter,
+		onKeyExit: onKeyExit,
 		countSubscribers: countSubscribers
 	};
 	

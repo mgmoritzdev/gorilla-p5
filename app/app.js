@@ -1,13 +1,13 @@
-define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], function(p5, Vector2, Gorilla, Banana, cm) {
+define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'inputManager', 'p5.sound'], function(p5, Vector2, Gorilla, Banana, cm, im) {
 
 	var processing;
 
 	var banana;
 	var gorillas;
 	var currentGorilla;
-	
+
 	var wind;
-	
+
 	var gameEnded = false;
 	var strengthAxis = 0;
 	var angleAxis = 0;
@@ -30,7 +30,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	var cannonFireSoundFile = 'assets/sounds/Tank Firing-SoundBible.com-998264747.mp3';
 	var explosionSoundFile = 'assets/sounds/Bomb 3-SoundBible.com-1260663209.mp3';
 
-	var p5Instance = new p5(function( sketch ) {
+	var p5Instance = new p5(function(sketch) {
 
 		processing = sketch;
 		sketch.preload = preload;
@@ -49,13 +49,15 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		explosionSound = processing.loadSound(explosionSoundFile);
 	}
 
-	function setup() {    
+	function setup() {
 		processing.createCanvas(window.innerWidth, window.innerHeight);
-		
+
 		touchControlCenter = new Vector2(processing.width / 2, processing.height / 2);
-		
+
 		resetGame();
 		processing.frameRate(60);
+
+		subscribeEvents();
 	}
 
 	function draw() {
@@ -81,7 +83,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 			displayGameResult();
 		}
 	}
-	
+
 	function displayTouchControl() {
 		if (currentGorilla.npc) {
 			return;
@@ -103,49 +105,6 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 			processing.fill(processing.color('red'));
 			processing.ellipse(touchControlCenter.x, touchControlCenter.y, 0.3 * touchControlRadius, 0.3 * touchControlRadius);
 		}
-	}
-
-	function mousePressed() {
-		touchControlPosition = new Vector2(processing.mouseX, processing.mouseY);
-		touchControlActive = touchControlPosition.dist(touchControlCenter) <= touchControlRadius;
-	}
-
-	function mouseDragged() {
-		touchControlDrag = true;
-		
-		touchControlPosition.x = processing.mouseX;
-		touchControlPosition.y = processing.mouseY;
-
-		var yDiff = touchControlCenter.y - touchControlPosition.y;
-		var xDiff = touchControlCenter.x - touchControlPosition.x;
-
-		if (Math.abs(yDiff) > processing.height/20) {
-			strengthAxis = 2 * yDiff / processing.height;
-		} else {
-			strengthAxis = 0;
-		}
-
-		if (Math.abs(xDiff) > processing.width/20) {
-			angleAxis = 2 * xDiff / processing.width;
-		} else {
-			angleAxis = 0;
-		}
-	}
-
-	function mouseReleased() {
-		if (gameEnded) {
-			resetGame();
-		}
-
-		if (!touchControlDrag && touchControlActive && !banana.isActive) {
-			throwBanana();
-		}
-
-		touchControlActive = false;
-		touchControlDrag = false;
-		touchControlPosition = touchControlCenter;
-		strengthAxis = 0;
-		angleAxis = 0;
 	}
 
 	function displayGameResult() {
@@ -193,11 +152,11 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		processing.text ('Ângulo: ' + Math.abs(angle % 90).toFixed(2), textX, 60);
 		processing.fill(255);
 	}
-	
+
 	function resetGame() {
 		gorillas = [];
 		cm.removeAllColliders();
-		
+
 		initializeBanana();
 		initializeGorila('blue', 45, false);
 		initializeGorila('red', 135, true);
@@ -215,7 +174,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	function initializeBanana() {
 		var diameter  = 10;
 		var mass = 1;
-		
+
 		banana = new Banana(mass, gravity * gravityScaleFactor, diameter);
 		banana.setRenderer(processing);
 	}
@@ -242,7 +201,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		var strengthOnStart = 10;
 		var diameter = 40;
 		var mass = 10;
-		
+
 		var xPos = (gorillas.length * 0.2 + 0.1) * processing.width;
 		var gorilla = new Gorilla(
 			gorillaColor,
@@ -333,7 +292,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 	function hitGround() {
 		return banana.physics.position.y > processing.height ||
 			banana.physics.position.x > processing.width * 1.5 ||
-			banana.physics.position.x < -0.5 * processing.width;		    
+			banana.physics.position.x < -0.5 * processing.width;
 	}
 
 	function handleKeyBananaThrow() {
@@ -348,7 +307,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		banana.physics.setPosition(gorilla.getGorillaCannonTip());
 		banana.physics.setVelocity(new Vector2(
 			gorilla.strength * processing.cos(processing.radians(gorilla.angle)),
-			gorilla.strength * -processing.sin(processing.radians(gorilla.angle))));		
+			gorilla.strength * -processing.sin(processing.radians(gorilla.angle))));
 		banana.isActive = true;
 		cannonFireSound.setVolume(0.3);
 		cannonFireSound.play();
@@ -372,7 +331,16 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		}
 	}
 
-	function keyPressed() {
+	function subscribeEvents() {
+		this.onKeyEnter = onKeyEnter;
+		this.onKeyExit = onKeyExit;
+		this.onClickEnter = onClickEnter;
+		this.onClickExit = onClickExit;
+		this.onClickDrag = onClickDrag;
+		var subscription = im.subscribe(this);
+	}
+
+	function onKeyEnter() {
 
 		if (gameEnded) {
 			handleKeyRestart();
@@ -387,7 +355,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 		handleKeyControls();
 	}
 
-	function keyReleased() {
+	function onKeyExit() {
 		if (processing.keyCode === processing.UP_ARROW) {
 			strengthAxis = 0;
 		} else if (processing.keyCode === processing.DOWN_ARROW) {
@@ -398,4 +366,78 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'p5.sound'], f
 			angleAxis = 0;
 		}
 	}
+
+	function onClickEnter() {
+		touchControlPosition = new Vector2(processing.mouseX, processing.mouseY);
+		touchControlActive = touchControlPosition.dist(touchControlCenter) <= touchControlRadius;
+	}
+
+	function onClickDrag() {
+		touchControlDrag = true;
+
+		touchControlPosition.x = processing.mouseX;
+		touchControlPosition.y = processing.mouseY;
+
+		var yDiff = touchControlCenter.y - touchControlPosition.y;
+		var xDiff = touchControlCenter.x - touchControlPosition.x;
+
+		if (Math.abs(yDiff) > processing.height/20) {
+			strengthAxis = 2 * yDiff / processing.height;
+		} else {
+			strengthAxis = 0;
+		}
+
+		if (Math.abs(xDiff) > processing.width/20) {
+			angleAxis = 2 * xDiff / processing.width;
+		} else {
+			angleAxis = 0;
+		}
+	}
+
+	function onClickExit() {
+		if (gameEnded) {
+			resetGame();
+		}
+
+		if (!touchControlDrag && touchControlActive && !banana.isActive) {
+			throwBanana();
+		}
+
+		touchControlActive = false;
+		touchControlDrag = false;
+		touchControlPosition = touchControlCenter;
+		strengthAxis = 0;
+		angleAxis = 0;
+	}
+
+	function mousePressed() {
+		mouseEvent('onClickEnter');
+	}
+
+	function mouseReleased() {
+		mouseEvent('onClickExit');
+	}
+
+	function mouseDragged() {
+		mouseEvent('onClickDrag');
+	}
+
+	function keyPressed() {
+		im.onKeyEnter(processing.keyCode);
+	}
+	
+	function keyReleased() {
+		im.onKeyExit(processing.keyCode);
+	}
+
+	function mouseEvent(eventName) {
+		var event = {};
+		event = {
+			mouseX: processing.mouseX,
+			mouseY: processing.mouseY
+		};
+
+		im[eventName](event);
+	}
+
 });
