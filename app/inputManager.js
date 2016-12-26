@@ -1,10 +1,9 @@
-define([], function() {
+define(['inputSubscriber'], function(Subscriber) {
 
 	var subscribers = [];	
 
 	function subscribe(obj) {
-		var sub = { obj: obj };
-		sub.callbacks = [];
+		var sub = new Subscriber(obj);
 		ensureProperties(sub, obj);
 		subscribers.push(sub);
 
@@ -18,36 +17,12 @@ define([], function() {
 		}
 	}
 
-	function registerCallback(sub, eventName, callback) {
-		sub[eventName] = callback;
-	}
-
 	function removeAllSubscriptions() {
 		subscribers.length = 0;
 	}
 
 	function fireEvent(eventName, event) {
 		onEvent(eventName, event);
-	}
-	
-	function onClickEnter(event) {
-		onEvent('onClickEnter', event);
-	}
-
-	function onClickExit(event) {
-		onEvent('onClickExit', event);
-	}
-
-	function onClickDrag(event) {
-		onEvent('onClickDrag', event);
-	}
-
-	function onKeyEnter(event) {
-		onEvent('onKeyEnter', event);
-	}
-
-	function onKeyExit(event) {
-		onEvent('onKeyExit', event);
 	}
 
 	function countSubscribers() {
@@ -98,14 +73,8 @@ define([], function() {
 	return {
 		subscribe: subscribe,
 		unsubscribe: unsubscribe,
-		registerCallback: registerCallback,
-		setEventArea: setEventArea,
+		fireEvent: fireEvent,
 		removeAllSubscriptions: removeAllSubscriptions,
-		onClickEnter: onClickEnter,
-		onClickExit: onClickExit,
-		onClickDrag: onClickDrag,
-		onKeyEnter: onKeyEnter,
-		onKeyExit: onKeyExit,
 		countSubscribers: countSubscribers
 	};
 	

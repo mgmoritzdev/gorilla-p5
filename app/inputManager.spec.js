@@ -43,13 +43,18 @@ define(['inputManager'],function (im) {
 	describe('Should implement a handle for', function() {
 
 		function onEvent(eventName) {
-			spyOn(im, eventName);
 
+			var obj = {};
+			var sub = im.subscribe(obj);
+			sub.registerCallback(eventName, function() {});
+
+			spyOn(sub, eventName);
+			
 			var event = {};
-			im[eventName](event);
+			im.fireEvent(eventName, event);
 
-			expect(im[eventName]).toBeDefined();
-			expect(im[eventName]).toHaveBeenCalled();
+			expect(sub[eventName]).toBeDefined();
+			expect(sub[eventName]).toHaveBeenCalled();
 		}
 
 		it('onClickEnter', function() {
@@ -86,8 +91,8 @@ define(['inputManager'],function (im) {
 
 			var event = 'success';
 			var sub = im.subscribe(obj);
-			im.registerCallback(sub, eventName, obj[eventName]);
-			im[eventName](event);
+			sub.registerCallback(eventName, obj[eventName]);
+			im.fireEvent(eventName, event);
 
 			expect(obj[eventName]).toHaveBeenCalled();
 			expect(obj.a).toBe(event);
@@ -136,10 +141,10 @@ define(['inputManager'],function (im) {
 			var event2 = { x: 15, y: 25 };
 			
 			var sub = im.subscribe(obj);
-			im.setEventArea(sub, onAreaCallback);
+			sub.setEventAreaCallback(onAreaCallback);
 			
-			im[eventName](event1);
-			im[eventName](event2);
+			im.fireEvent(eventName, event1);
+			im.fireEvent(eventName, event2);
 
 			expect(obj[eventName]).toHaveBeenCalled();
 			expect(obj.a).toBe(event1); // and not event2, given it doesn't trigger the callback.
