@@ -332,12 +332,12 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'inputManager'
 	}
 
 	function subscribeEvents() {
-		this.onKeyEnter = onKeyEnter;
-		this.onKeyExit = onKeyExit;
-		this.onClickEnter = onClickEnter;
-		this.onClickExit = onClickExit;
-		this.onClickDrag = onClickDrag;
 		var subscription = im.subscribe(this);
+		subscription.registerCallback('onKeyEnter', onKeyEnter);
+		subscription.registerCallback('onKeyExit', onKeyExit);
+		subscription.registerCallback('onClickEnter', onClickEnter);
+		subscription.registerCallback('onClickExit', onClickExit);
+		subscription.registerCallback('onClickDrag', onClickDrag);
 	}
 
 	function onKeyEnter() {
@@ -423,11 +423,11 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'inputManager'
 	}
 
 	function keyPressed() {
-		im.onKeyEnter(processing.keyCode);
+		im.fireEvent('onKeyEnter', processing.keyCode);
 	}
-	
+
 	function keyReleased() {
-		im.onKeyExit(processing.keyCode);
+		im.fireEvent('onKeyExit', processing.keyCode);
 	}
 
 	function mouseEvent(eventName) {
@@ -437,7 +437,7 @@ define(['p5', 'vector2', 'gorilla', 'banana', 'collisionManager', 'inputManager'
 			mouseY: processing.mouseY
 		};
 
-		im[eventName](event);
+		im.fireEvent(eventName, event);
 	}
 
 });
